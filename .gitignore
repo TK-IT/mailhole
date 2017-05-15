@@ -1,0 +1,4 @@
+*.swp
+/mailhole/settings/__init__.py
+/venv
+__pycache__
