@@ -5,6 +5,11 @@ import sys
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mailhole.settings")
     try:
+        with open(os.path.dirname(__file__) + '/../automysql.py') as fp:
+            exec(fp.read(), {})
+    except FileNotFoundError:
+        pass
+    try:
         from django.core.management import execute_from_command_line
     except ImportError:
         # The above import may fail for some other reason. Ensure that the
