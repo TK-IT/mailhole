@@ -17,7 +17,7 @@ sendes den i stedet til
     rcpt_to=mathiasrav@hotmail.dk
     message_bytes=RFC2822 message data...
 
-En bruger kan logge ind og se mails til sine designerede mailbokse
+En postmaster (f.eks. en fra TKs admingruppe) kan logge ind
 og markere hver som "spam" eller "videresend":
 
     | ⦻ | → | Fra            | Til           | Emne               |
@@ -25,6 +25,34 @@ og markere hver som "spam" eller "videresend":
     |[ ]|[ ]| ....           | ....          | ....               |
     ...
     [Udfør]
+
+
+TODO
+----
+
+* Mulighed for white-listing af afsender
+* Mulighed for white-listing på subject
+* Når en mail kommer ind på API'et skal den sendes videre med det samme hvis den matcher whitelist
+* HTTPS-API til batch-håndtering i editor
+* Touch+small screen-venlig
+
+
+Overvejelser
+------------
+
+Det nytter ikke noget at give BEST og tutorbest adgang til endnu et system
+de skal logge ind på og huske at tjekke. Det er bedre at sætte Rav og FUHI
+til det, for så har de et incitament til at finde en langtidsholdbar løsning!
+
+Desuden er det mere effektivt at sætte nogle få personer til at gøre det
+og udvikle et ekspert-system til det (f.eks. terminal-baseret, men det behøver
+det ikke), end at sætte mange brugere til at bruge et mere brugervenligt system.
+
+Endelig gør det at BEST og tutorbest ikke har endnu en ting at skulle sættes
+ind i som en del af bestyrelsesarbejdet.
+
+Branding: "TK-admingruppen og Tutorweb har indgået samarbejde med PostNord.
+Samme services som før, men nu med et døgns forsinkelse ved levering til Hotmail!"
 
 
 Installation
