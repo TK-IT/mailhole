@@ -123,5 +123,5 @@ STATIC_URL = '/static/'
 
 LOGIN_URL = '/login/'
 
-SITE_NAME = 'mailhole.tket.dk'
+SITE_NAME = 'mail.tket.dk'
 MANAGER_NAME = 'Mathias Rav'
