@@ -1,10 +1,17 @@
 {% extends 'mailhole/base.html' %}
 {% block title %}{{ status }} - {{ mailbox }}{% endblock %}
-{% block nav %}<a href="{{ mailbox.get_absolute_url }}">{{ mailbox }}</a>{% endblock %}
+{% block nav %}
+{% if all %}<a href="{% url 'mailbox_list' %}">Alle</a>
+{% else %}<a href="{{ mailbox.get_absolute_url }}">{{ mailbox }}</a>
+{% endif %}{% endblock %}
 {% block navcurrent %}<span>{{ status }}</span>{% endblock %}
 {% block content %}
+{% if all %}
+<h1>{{ status }}</h1>
+{% else %}
 <h1>{{ mailbox }}</h1>
 <h2>{{ status }}</h2>
+{% endif %}
 {% if inbox %}
 <p>
 Markér emails som <b>Spam</b> for at sende dem til spammappen,
@@ -41,7 +48,8 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
     <td>{{ message.form.trash }}</td>
     {% endif %}
     <td>{{ message.from_ }}</td>
-    <td>{{ message.to_as_html }}</td>
+    <td>{% if all %}{{ message.mailbox }}
+        {% else %}{{ message.to_as_html }}{% endif %}</td>
     <td><a href="{{ message.get_absolute_url }}">{{ message.subject|default:BLANK_SUBJECT }}</a></td>
 </tr>
 {% endfor %}

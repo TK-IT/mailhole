@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.utils.decorators import method_decorator
 from django.http import (
     HttpResponseBadRequest, HttpResponse, HttpResponseNotFound,
@@ -53,6 +54,12 @@ class MailboxList(MailboxRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         context_data['object_list'] = self.mailboxes
+        context_data['all_folders'] = [
+            (key, label, reverse('message_list', kwargs=dict(status=key)),
+             Message.objects.filter(mailbox__in=self.mailboxes,
+                                    status=key))
+            for key, label in Message.STATUS
+        ]
         return context_data
 
 
@@ -63,6 +70,33 @@ class MailboxDetail(SingleMailboxRequiredMixin, TemplateView):
         context_data = super().get_context_data(**kwargs)
         context_data['mailbox'] = self.mailbox
         return context_data
+
+
+class MessageList(MailboxRequiredMixin, FormView):
+    template_name = 'mailhole/message_list.html'
+    form_class = MessageListForm
+
+    def get_queryset(self):
+        return Message.objects.filter(status=self.kwargs['status'],
+                                      mailbox__in=self.mailboxes)
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs(**kwargs)
+        kwargs['queryset'] = self.get_queryset()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        form = context_data['form']
+        context_data['all'] = True
+        context_data['status'] = Message.status_display(self.kwargs['status'])
+        context_data['inbox'] = self.kwargs['status'] == Message.INBOX
+        context_data['object_list'] = form.messages
+        return context_data
+
+    def form_valid(self, form):
+        form.save(self.request.user)
+        return redirect(self.request.path)
 
 
 class MailboxMessageList(SingleMailboxRequiredMixin, FormView):

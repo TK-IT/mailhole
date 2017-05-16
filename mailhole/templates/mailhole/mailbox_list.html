@@ -3,6 +3,13 @@
 {% block content %}
 <h1>Modtager-adresser</h1>
 <ul>
+    <li>Alle
+        <ul>
+            {% for key, label, url, qs in all_folders %}
+            <li><a href="{{ url }}">{{ label }}</a> ({{ qs.count }})</li>
+            {% endfor %}
+        </ul>
+    </li>
     {% for mailbox in object_list %}
     <li>{{ mailbox.email }}
         <ul>
