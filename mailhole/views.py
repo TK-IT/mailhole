@@ -68,7 +68,7 @@ class MailboxDetail(SingleMailboxRequiredMixin, TemplateView):
         return context_data
 
 
-class MessageList(SingleMailboxRequiredMixin, FormView):
+class MailboxMessageList(SingleMailboxRequiredMixin, FormView):
     template_name = 'mailhole/message_list.html'
     form_class = MessageListForm
 
