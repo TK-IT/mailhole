@@ -21,7 +21,7 @@ class MailboxRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        self.mailboxes = list(request.user.mailbox_set.all())
+        self.mailboxes = list(Mailbox.owned_by_user(request.user))
         if not self.mailboxes and not request.user.is_superuser:
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
@@ -31,10 +31,7 @@ class SingleMailboxRequiredMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if request.user.is_superuser:
-            qs = Mailbox.objects.all()
-        else:
-            qs = request.user.mailbox_set.all()
+        qs = Mailbox.visible_to_user(request.user)
         try:
             self.mailbox = qs.get(email=kwargs['mailbox'])
         except Mailbox.DoesNotExist:

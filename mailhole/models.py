@@ -34,6 +34,17 @@ class Mailbox(models.Model):
             mailbox.save()
             return mailbox
 
+    @classmethod
+    def owned_by_user(cls, user):
+        return cls.objects.filter(readers=user)
+
+    @classmethod
+    def visible_to_user(cls, user):
+        if user.is_superuser:
+            return cls.objects.all()
+        else:
+            return cls.objects.filter(readers=user)
+
     def folders(self):
         for key, label in Message.STATUS:
             url = reverse('mailbox_message_list',
