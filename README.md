@@ -25,3 +25,48 @@ og markere hver som "spam" eller "videresend":
     |[ ]|[ ]| ....           | ....          | ....               |
     ...
     [Udfør]
+
+
+Installation
+============
+
+Create `mailhole/settings/__init__.py` as follows:
+
+```
+from .common import *  # noqa
+
+SECRET_KEY = r'''generate with pwgen -sy 50 1'''
+
+DEBUG = True
+
+DATABASES['default'] = {
+    'ENGINE': 'django.db.backends.mysql',
+    'NAME': '...',
+    'USER': '...',
+    'PASSWORD': '...',
+    'OPTIONS': {
+        'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+    },
+}
+```
+
+**Make sure that you create your MySQL database with `CHARACTER SET utf8`.**
+Character set utf8mb4 will not work since we have a unique `EmailField`,
+and MySQL InnoDB old format with utf8mb4 can only handle indexes of fields
+of 191 characters or less.
+
+Install the requirements and mysqlclient with pip:
+
+```
+pyvenv mailhole-venv
+. mailhole-venv/bin/activate
+pip install 'django==1.11.1' 'django-macros==0.4.0' html2text mysqlclient
+```
+
+Run migrate, createsuperuser and runserver:
+
+```
+./manage.py migrate
+./manage.py createsuperuser
+./manage.py runserver
+```

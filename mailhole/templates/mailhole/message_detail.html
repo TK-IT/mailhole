@@ -1,0 +1,20 @@
+{% extends 'mailhole/base.html' %}
+{% block title %}{{ message.subject|default:BLANK_SUBJECT }}{% endblock %}
+{% block nav %}
+<a href="{% url 'mailbox_detail' mailbox=message.mailbox.email %}">
+    {{ message.mailbox }}</a>
+<a href="{% url 'message_list' mailbox=message.mailbox.email status=message.status %}">
+    {{ message.get_status_display }}</a>
+{% endblock %}
+{% block content %}
+<h1>{{ message.subject|default:BLANK_SUBJECT }}</h1>
+<form method="post">{% csrf_token %}
+{{ form.errors }}
+<p><i>Fra:</i> {{ message.from_ }}</p>
+<p><i>Til:</i> {{ message.to_as_html }}</p>
+<div style="white-space: pre-wrap">{{ message.body_text }}</div>
+<p>{{ form.recipient }} <input type="submit" name="send" value="Videresend" /></p>
+<p><input type="submit" name="trash" value="Slet" /></p>
+<p><input type="submit" name="spam" value="Markér som spam" /></p>
+</form>
+{% endblock %}

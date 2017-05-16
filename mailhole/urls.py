@@ -15,7 +15,19 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+import mailhole.views
+from mailhole.models import Message
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+
+    url(r'^$', mailhole.views.MailboxList.as_view(), name='mailbox_list'),
+    url(r'^login/$', mailhole.views.LoginView.as_view(), name='login'),
+    url(r'^api/submit/$', mailhole.views.Submit.as_view(), name='submit'),
+    url(r'^(?P<mailbox>[^/]+@[^/]+)/$',
+        mailhole.views.MailboxDetail.as_view(), name='mailbox_detail'),
+    url(r'^(?P<mailbox>[^/]+@[^/]+)/(?P<status>inbox|spam|trash)/$',
+        mailhole.views.MessageList.as_view(), name='message_list'),
+    url(r'^(?P<mailbox>[^/]+@[^/]+)/(?P<pk>\d+)/$',
+        mailhole.views.MessageDetail.as_view(), name='message_detail'),
 ]

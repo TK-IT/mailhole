@@ -1,0 +1,10 @@
+{% extends 'mailhole/base.html' %}
+{% block title %}Log ind{% endblock %}
+{% block content %}
+<h1>Log ind</h1>
+<p>Velkommen til {{ SITE_NAME }}. Hvis du har glemt dit login, så kontakt {{ MANAGER_NAME }}.</p>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Log ind" />
+</form>
+{% endblock %}

@@ -1,0 +1,69 @@
+/* vim:set sw=4 et: */
+body {
+    margin: 0;
+    font-family: "Roboto", "Lucida Grande", Verdana, Arial, sans-serif;
+    color: #333;
+    font-size: 13px;
+    line-height: 16px;
+}
+
+nav[role=navigation] {
+    -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.15),0 1px 5px rgba(0,0,0,.075);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.15),0 1px 5px rgba(0,0,0,.075);
+    background-image:-webkit-linear-gradient(top,#fff 0,#f8f8f8 100%);
+    background-image:-o-linear-gradient(top,#fff 0,#f8f8f8 100%);
+    background-image:-webkit-gradient(linear,left top,left bottom,from(#fff),to(#f8f8f8));
+    background-image:linear-gradient(to bottom,#fff 0,#f8f8f8 100%);
+    border: 1px solid #E7E7E7;
+    border-width: 1px 0;
+    margin-bottom: 16px;
+
+    display: flex;
+    display: -webkit-flex;
+    flex-direction: row;
+    -webkit-flex-direction: row;
+    min-height: 50px;
+    padding: 0 8px;
+    margin-top: 8px;
+}
+
+main[role=main] {
+    padding: 0 8px;
+}
+
+nav[role=navigation] > a, nav[role=navigation] > span {
+    margin-right: 1em;
+    line-height: 50px;
+    color: inherit;
+    text-decoration: none;
+}
+
+@media (min-width: 768px) {
+    main[role=main] {
+        width: 720px;
+        padding: 0 24px;
+        margin: 0 auto;
+    }
+    nav[role=navigation] {
+        padding: 0 calc(50% - 720px/2);
+    }
+}
+
+@media (min-width: 992px) {
+    main[role=main] {
+        width: 944px;
+    }
+    nav[role=navigation] {
+        padding: 0 calc(50% - 944px/2);
+    }
+}
+
+@media (min-width: 1200px) {
+    main[role=main] {
+        width: 1152px;
+    }
+    nav[role=navigation] {
+        padding: 0 calc(50% - 1152px/2);
+    }
+}
+

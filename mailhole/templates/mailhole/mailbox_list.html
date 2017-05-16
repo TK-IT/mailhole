@@ -1,0 +1,16 @@
+{% extends 'mailhole/base.html' %}
+{% block title %}Modtager-adresser{% endblock %}
+{% block content %}
+<h1>Modtager-adresser</h1>
+<ul>
+    {% for mailbox in object_list %}
+    <li>{{ mailbox.email }}
+        <ul>
+            {% for key, label, url, qs in mailbox.folders %}
+            <li><a href="{{ url }}">{{ label }}</a> ({{ qs.count }})</li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

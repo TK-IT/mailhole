@@ -1,0 +1,10 @@
+{% extends 'mailhole/base.html' %}
+{% block title %}{{ mailbox }}{% endblock %}
+{% block content %}
+<h1>{{ mailbox }}</h1>
+<ul>
+    {% for key, label, url, qs in mailbox.folders %}
+    <li><a href="{{ url }}">{{ label }}</a> ({{ qs.count }})</li>
+    {% endfor %}
+</ul>
+{% endblock %}

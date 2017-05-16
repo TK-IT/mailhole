@@ -1,0 +1,52 @@
+{% extends 'mailhole/base.html' %}
+{% block title %}{{ status }} - {{ mailbox }}{% endblock %}
+{% block nav %}<a href="{{ mailbox.get_absolute_url }}">{{ mailbox }}</a>{% endblock %}
+{% block navcurrent %}<span>{{ status }}</span>{% endblock %}
+{% block content %}
+<h1>{{ mailbox }}</h1>
+<h2>{{ status }}</h2>
+{% if inbox %}
+<p>
+Markér emails som <b>Spam</b> for at sende dem til spammappen,
+eller markér <b>Send</b> for at videresende dem til {{ mailbox.email }} og slette dem,
+eller markér <b>Slet</b> hvis du bare vil slette dem.
+</p>
+<p>
+<b>Du må ikke videresende spam-mails!</b>
+Hvis du er i tvivl, så læs mailen inden du videresender den.
+</p>
+{% endif %}
+
+<form method="post">{% csrf_token %}
+{{ form.errors }}
+<table>
+<thead>
+<tr>
+{% if inbox %}
+<th>Spam</th>
+<th>Send</th>
+<th>Slet</th>
+{% endif %}
+<th>Fra</th>
+<th>Til</th>
+<th>Emne</th>
+</tr>
+</thead>
+<tbody>
+{% for message in object_list %}
+<tr>
+    {% if inbox %}
+    <td>{{ message.form.spam }}</td>
+    <td>{{ message.form.forward }}</td>
+    <td>{{ message.form.trash }}</td>
+    {% endif %}
+    <td>{{ message.from_ }}</td>
+    <td>{{ message.to_as_html }}</td>
+    <td><a href="{{ message.get_absolute_url }}">{{ message.subject|default:BLANK_SUBJECT }}</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% if inbox %}<input type="submit" value="Udfør handlinger" />{% endif %}
+</form>
+{% endblock %}
