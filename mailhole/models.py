@@ -36,8 +36,8 @@ class Mailbox(models.Model):
 
     def folders(self):
         for key, label in Message.STATUS:
-            url = reverse('message_list', kwargs=dict(mailbox=self.email,
-                                                      status=key))
+            url = reverse('mailbox_message_list',
+                          kwargs=dict(mailbox=self.email, status=key))
             qs = self.message_set.filter(status=key)
             yield key, label, url, qs
 
