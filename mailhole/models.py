@@ -7,7 +7,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
-from django.utils import html
+from django.utils import html, timezone
 
 from mailhole.utils import html_to_plain, decode_any_header
 import email.utils
@@ -86,6 +86,14 @@ class DjangoMessage(MIMEMixin, email.message.Message):
     pass
 
 
+def message_upload_to(message: 'Message', filename):
+    return 'messages/{peer}/{mailbox}/{now}.mail'.format(
+        peer=message.peer.slug,
+        mailbox=message.mailbox.email,
+        now=timezone.now().isoformat().replace(':', '_'),
+    )
+
+
 class Message(models.Model):
     '''
     A message received by a Peer for one of our mailboxes.
@@ -105,6 +113,9 @@ class Message(models.Model):
     mail_from = models.CharField(max_length=256)
     rcpt_to = models.CharField(max_length=256)
     message_bytes = models.BinaryField()
+    message_file = models.FileField(upload_to=message_upload_to, null=True)
+    headers = models.TextField(null=True)
+    body_text = models.TextField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS,
                               default=INBOX)
@@ -159,7 +170,7 @@ class Message(models.Model):
                        kwargs=dict(mailbox=self.mailbox.email,
                                    pk=self.pk))
 
-    def body_text(self):
+    def get_body_text(self):
         try:
             text_part = next(part for part in self.message.walk()
                              if part.get_content_maintype() == 'text')
