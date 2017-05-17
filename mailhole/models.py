@@ -2,6 +2,7 @@ import email
 
 import django.core.mail
 from django.core.mail import EmailMessage
+from django.core.mail.message import MIMEMixin
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -71,6 +72,10 @@ class Peer(models.Model):
             raise ValidationError('Invalid peer key')
 
 
+class DjangoMessage(MIMEMixin, email.message.Message):
+    pass
+
+
 class Message(models.Model):
     '''
     A message received by a Peer for one of our mailboxes.
@@ -112,7 +117,7 @@ class Message(models.Model):
             return self._message
         except AttributeError:
             self._message = (
-                email.message_from_bytes(self.message_bytes))
+                email.message_from_bytes(self.message_bytes, DjangoMessage))
             return self._message
 
     def from_(self):
