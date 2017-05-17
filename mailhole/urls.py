@@ -13,7 +13,9 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.conf.urls import url
+import django.views.static
 from django.contrib import admin
 import mailhole.views
 from mailhole.models import Message
@@ -33,3 +35,11 @@ urlpatterns = [
     url(r'^(?P<mailbox>[^/]+@[^/]+)/(?P<pk>\d+)/$',
         mailhole.views.MessageDetail.as_view(), name='message_detail'),
 ]
+
+if settings.DEBUG:
+    # Temporary media (user uploaded static files)
+    # serving from dev server
+    urlpatterns.append(
+        url(r'^uploads/(?P<path>.*)$',
+            django.views.static.serve,
+            {'document_root': settings.MEDIA_ROOT}))
