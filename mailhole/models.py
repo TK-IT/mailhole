@@ -72,6 +72,7 @@ class Peer(models.Model):
     '''
     key = models.CharField(max_length=256)
     default_readers = models.ManyToManyField(User, blank=True)
+    slug = models.CharField(max_length=30)
 
     @classmethod
     def validate(cls, key):
