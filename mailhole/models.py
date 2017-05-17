@@ -141,6 +141,27 @@ class Message(models.Model):
                 email.message_from_bytes(self.message_bytes, DjangoMessage))
             return self._message
 
+    def extract_message_data(self):
+        '''
+        Set self.headers and self.body_text from self.message_file.
+        '''
+        self.message_file.open('rb')
+        message_bytes = self.message_file.read()
+        try:
+            header_end = message_bytes.index(b'\r\n\r\n') + 4
+        except ValueError:
+            raise ValidationError('Message must contain CR LF CR LF')
+        try:
+            self.headers = message_bytes[:header_end].decode('ascii')
+        except UnicodeDecodeError:
+            raise ValidationError('Message headers must be ASCII')
+        try:
+            message = email.message_from_bytes(message_bytes, DjangoMessage)
+        except Exception:
+            raise ValidationError('Could not parse message')
+        self.body_text = self.get_body_text(message)
+        self.message_file.close()
+
     def from_(self):
         return str(decode_any_header(self.message.get('From') or ''))
 
@@ -170,9 +191,9 @@ class Message(models.Model):
                        kwargs=dict(mailbox=self.mailbox.email,
                                    pk=self.pk))
 
-    def get_body_text(self):
+    def get_body_text(self, message):
         try:
-            text_part = next(part for part in self.message.walk()
+            text_part = next(part for part in message.walk()
                              if part.get_content_maintype() == 'text')
         except StopIteration:
             return
