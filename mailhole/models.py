@@ -27,6 +27,7 @@ class Mailbox(models.Model):
 
     @classmethod
     def get_or_create(cls, email):
+        email = email.lower()
         try:
             return cls.objects.get(email=email)
         except cls.DoesNotExist:
