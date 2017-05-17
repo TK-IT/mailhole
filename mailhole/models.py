@@ -133,6 +133,15 @@ class Message(models.Model):
         return message
 
     @property
+    def parsed_headers(self):
+        try:
+            return self._parsed_headers
+        except AttributeError:
+            self._parsed_headers = (
+                email.message_from_string(self.headers, DjangoMessage))
+            return self._parsed_headers
+
+    @property
     def message(self):
         try:
             return self._message
@@ -163,12 +172,12 @@ class Message(models.Model):
         self.message_file.close()
 
     def from_(self):
-        return str(decode_any_header(self.message.get('From') or ''))
+        return str(decode_any_header(self.parsed_headers.get('From') or ''))
 
     def to_people(self):
         keys = ('To', 'Cc')
         values = [v for k in keys
-                  for v in (self.message.get_all(k) or ())]
+                  for v in (self.parsed_headers.get_all(k) or ())]
         parsed = email.utils.getaddresses(values)
         for realname, address in parsed:
             realname = str(decode_any_header(realname))
@@ -184,7 +193,7 @@ class Message(models.Model):
                                      self.to_people())
 
     def subject(self):
-        return str(decode_any_header(self.message.get('Subject') or ''))
+        return str(decode_any_header(self.parsed_headers.get('Subject') or ''))
 
     def get_absolute_url(self):
         return reverse('message_detail',
