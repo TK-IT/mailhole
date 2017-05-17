@@ -15,8 +15,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='message',
-            name='body_text',
-            field=models.TextField(null=True),
+            name='body_text_bytes',
+            field=models.BinaryField(null=True),
         ),
         migrations.AddField(
             model_name='message',

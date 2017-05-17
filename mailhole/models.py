@@ -116,7 +116,7 @@ class Message(models.Model):
     message_bytes = models.BinaryField()
     message_file = models.FileField(upload_to=message_upload_to, null=True)
     headers = models.TextField(null=True)
-    body_text = models.TextField(null=True)
+    body_text_bytes = models.BinaryField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS,
                               default=INBOX)
@@ -174,6 +174,15 @@ class Message(models.Model):
             raise ValidationError('Could not parse message')
         self.body_text = self.get_body_text(message)
         self.message_file.close()
+
+    @property
+    def body_text(self):
+        if self.body_text_bytes is not None:
+            return self.body_text_bytes.decode('utf8')
+
+    @body_text.setter
+    def body_text(self, value):
+        self.body_text_bytes = None if value is None else value.encode('utf8')
 
     def from_(self):
         return str(decode_any_header(self.parsed_headers.get('From') or ''))
