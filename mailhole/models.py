@@ -7,6 +7,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.files.base import ContentFile
 from django.utils import html, timezone
 
 from mailhole.utils import html_to_plain, decode_any_header
@@ -126,8 +127,9 @@ class Message(models.Model):
         message = cls(mailbox=mailbox, peer=peer,
                       mail_from=mail_from,
                       rcpt_to=rcpt_to,
-                      message_bytes=message_bytes,
+                      message_file=ContentFile(message_bytes),
                       status=cls.INBOX)
+        message.extract_message_data()
         message.clean()
         message.save()
         return message
