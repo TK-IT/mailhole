@@ -26,7 +26,11 @@ class Mailbox(models.Model):
         return self.email
 
     @classmethod
-    def get_or_create(cls, email):
+    def get_or_create(cls, email, peer=None):
+        '''
+        If peer is given and no Mailbox with email exists, readers are added
+        based on peer.default_readers.
+        '''
         email = email.lower()
         try:
             return cls.objects.get(email=email)
@@ -34,6 +38,9 @@ class Mailbox(models.Model):
             mailbox = cls(email=email)
             mailbox.clean()
             mailbox.save()
+            if peer is not None:
+                for r in peer.default_readers.all():
+                    mailbox.readers.add(r)
             return mailbox
 
     @classmethod
@@ -64,6 +71,7 @@ class Peer(models.Model):
     A front-end SMTP server who receives emails for our mailboxes.
     '''
     key = models.CharField(max_length=256)
+    default_readers = models.ManyToManyField(User, blank=True)
 
     @classmethod
     def validate(cls, key):
@@ -102,7 +110,7 @@ class Message(models.Model):
 
     @classmethod
     def create(cls, peer, mail_from, rcpt_to, message_bytes):
-        mailbox = Mailbox.get_or_create(rcpt_to)
+        mailbox = Mailbox.get_or_create(rcpt_to, peer)
         message = cls(mailbox=mailbox, peer=peer,
                       mail_from=mail_from,
                       rcpt_to=rcpt_to,
