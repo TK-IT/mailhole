@@ -16,7 +16,7 @@ def populate_message_fields(apps, schema_editor):
             continue
         message.message_file.save(
             'message.msg', ContentFile(message.message_bytes))
-        mailhole.models.Message.extract_message_data(message)
+        mailhole.models.Message._extract_message_data(message)
         message.save()
 
 

@@ -153,7 +153,8 @@ class Message(models.Model):
             self.message_file.close()
             return self._message
 
-    def extract_message_data(self):
+    @staticmethod
+    def _extract_message_data(self):
         '''
         Set self.headers and self.body_text from self.message_file.
         '''
@@ -171,8 +172,11 @@ class Message(models.Model):
             message = email.message_from_bytes(message_bytes, DjangoMessage)
         except Exception:
             raise ValidationError('Could not parse message')
-        self.body_text = self.get_body_text(message)
+        self.body_text = Message._get_body_text(self, message)
         self.message_file.close()
+
+    def extract_message_data(self):
+        self._extract_message_data(self)
 
     @property
     def body_text(self):
@@ -212,7 +216,8 @@ class Message(models.Model):
                        kwargs=dict(mailbox=self.mailbox.email,
                                    pk=self.pk))
 
-    def get_body_text(self, message):
+    @staticmethod
+    def _get_body_text(self, message):
         try:
             text_part = next(part for part in message.walk()
                              if part.get_content_maintype() == 'text')
