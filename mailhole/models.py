@@ -148,8 +148,10 @@ class Message(models.Model):
         try:
             return self._message
         except AttributeError:
+            self.message_file.open('rb')
             self._message = (
-                email.message_from_bytes(self.message_bytes, DjangoMessage))
+                email.message_from_binary_file(self.message_file, DjangoMessage))
+            self.message_file.close()
             return self._message
 
     def extract_message_data(self):
