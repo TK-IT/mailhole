@@ -150,13 +150,14 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
         return dict(recipient=self.get_object().rcpt_to)
 
     def form_valid(self, form):
+        user = self.request.user
         fresh_form = MessageDetailForm()
         message = self.get_object()
         if form.cleaned_data['send']:
             # SentMessage.create_and_send logs the action
             recipient = form.cleaned_data['recipient']
             SentMessage.create_and_send(message=message,
-                                        user=self.request.user,
+                                        user=user,
                                         recipient=recipient)
             return self.render_to_response(
                 self.get_context_data(sent=True, form=fresh_form))
@@ -165,14 +166,14 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
         if form.cleaned_data['trash']:
             logger.info('user:%s (%s) message:%s marked trash',
                         user.pk, user.username, message.pk)
-            message.set_status(Message.TRASH, user=self.request.user)
+            message.set_status(Message.TRASH, user=user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)
         if form.cleaned_data['spam']:
             logger.info('user:%s (%s) message:%s marked spam',
                         user.pk, user.username, message.pk)
-            message.set_status(Message.SPAM, user=self.request.user)
+            message.set_status(Message.SPAM, user=user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)
