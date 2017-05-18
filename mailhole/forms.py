@@ -70,17 +70,17 @@ class MessageListForm(forms.Form):
             if self.cleaned_data[spam_k]:
                 logger.info('user:%s (%s) message:%s marked spam',
                             user.pk, user.username, message.pk)
-                message.set_status(Message.SPAM, user)
+                message.set_status(Message.SPAM, user=user)
                 message.save()
             if self.cleaned_data[trash_k]:
                 logger.info('user:%s (%s) message:%s marked trash',
                             user.pk, user.username, message.pk)
-                message.set_status(Message.TRASH, user)
+                message.set_status(Message.TRASH, user=user)
                 message.save()
             if self.cleaned_data[forward_k]:
                 # SentMessage.create_and_send logs the action
                 SentMessage.create_and_send(message=message, user=user)
-                message.set_status(Message.TRASH, user)
+                message.set_status(Message.TRASH, user=user)
                 message.save()
 
 

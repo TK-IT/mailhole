@@ -165,14 +165,14 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
         if form.cleaned_data['trash']:
             logger.info('user:%s (%s) message:%s marked trash',
                         user.pk, user.username, message.pk)
-            message.set_status(Message.TRASH, self.request.user)
+            message.set_status(Message.TRASH, user=self.request.user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)
         if form.cleaned_data['spam']:
             logger.info('user:%s (%s) message:%s marked spam',
                         user.pk, user.username, message.pk)
-            message.set_status(Message.SPAM, self.request.user)
+            message.set_status(Message.SPAM, user=self.request.user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)

@@ -340,7 +340,7 @@ class Message(models.Model):
         o = cls(status=status)
         return o.get_status_display()
 
-    def set_status(self, status, user):
+    def set_status(self, status, *, user=None):
         self.status = status
         self.status_by = user
         self.status_on = timezone.now()
@@ -359,10 +359,10 @@ class Message(models.Model):
                     self.pk, self.peer_id, self.peer.slug,
                     filter.pk, filter.action)
         if filter.action == FilterRule.MARK_SPAM:
-            self.set_status(Message.SPAM, user=None)
+            self.set_status(Message.SPAM)
             self.save()
         elif filter.action == FilterRule.FORWARD:
-            self.set_status(Message.TRASH, user=None)
+            self.set_status(Message.TRASH)
             self.save()
             SentMessage.create_and_send(self, user=None)
         else:
