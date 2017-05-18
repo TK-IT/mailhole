@@ -190,7 +190,11 @@ class FilterRule(models.Model):
 
     @classmethod
     def whitelist_from(cls, message, user):
-        order = cls.objects.all().aggregate(order=Max('order'))['order'] + 1
+        max_order = cls.objects.all().aggregate(order=Max('order'))['order']
+        if max_order is None:
+            # No objects exist yet
+            max_order = 0
+        order = max_order + 1
         from_ = message.from_()
         filter = cls(order=order,
                      kind=FilterRule.HEADER_MATCH,
