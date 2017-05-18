@@ -449,7 +449,7 @@ class SentMessage(models.Model):
 
     def __str__(self):
         return '<SentMessage %s %s>' % (self.created_time.isoformat(),
-                                        self.message.subject)
+                                        self.message.subject())
 
     @classmethod
     def create_and_send(cls, message, user, recipient=None):
