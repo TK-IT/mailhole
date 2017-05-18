@@ -268,6 +268,9 @@ class Message(models.Model):
         message.extract_message_data()
         message.clean()
         message.save()
+        logger.info("message:%s peer:%s Subject: %r From: %s To: %s",
+                    message.pk, peer.slug, str(message.subject()),
+                    message.from_address(), message.rcpt_to)
         return message
 
     @property
@@ -329,6 +332,17 @@ class Message(models.Model):
 
     def from_(self):
         return str(decode_any_header(self.parsed_headers.get('From') or ''))
+
+    def from_address(self):
+        '''
+        Returns the address portion of the From:-header.
+
+        If the message contains an invalid number of From:-headers,
+        returns the addresses joined with commas
+        (or the empty string in case of no From:-header).
+        '''
+        parsed = email.utils.getaddresses(self.parsed_headers.get_all('From'))
+        return ','.join(address for realname, address in parsed)
 
     def to_people(self):
         keys = ('To', 'Cc')
