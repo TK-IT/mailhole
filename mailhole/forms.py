@@ -63,14 +63,14 @@ class MessageListForm(forms.Form):
             forward_k = 'forward_%s' % message.pk
             trash_k = 'trash_%s' % message.pk
             if self.cleaned_data[spam_k]:
-                message.status = Message.SPAM
+                message.set_status(Message.SPAM, user)
                 message.save()
             if self.cleaned_data[trash_k]:
-                message.status = Message.TRASH
+                message.set_status(Message.TRASH, user)
                 message.save()
             if self.cleaned_data[forward_k]:
                 SentMessage.create_and_send(message=message, user=user)
-                message.status = Message.TRASH
+                message.set_status(Message.TRASH, user)
                 message.save()
 
 

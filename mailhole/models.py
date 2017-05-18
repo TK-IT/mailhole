@@ -122,6 +122,9 @@ class Message(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS,
                               default=INBOX)
+    status_by = models.ForeignKey(User, on_delete=models.SET_NULL,
+                                  blank=True, null=True)
+    status_on = models.DateTimeField(blank=True, null=True)
 
     @classmethod
     def create(cls, peer, mail_from, rcpt_to, message_bytes):
@@ -240,6 +243,11 @@ class Message(models.Model):
     def status_display(cls, status):
         o = cls(status=status)
         return o.get_status_display()
+
+    def set_status(self, status, user):
+        self.status = status
+        self.status_by = user
+        self.status_on = timezone.now()
 
 
 class UnsafeEmailMessage(EmailMessage):

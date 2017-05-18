@@ -155,12 +155,12 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
 
         return_to = message.status
         if form.cleaned_data['trash']:
-            message.status = Message.TRASH
+            message.set_status(Message.TRASH, self.request.user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)
         if form.cleaned_data['spam']:
-            message.status = Message.SPAM
+            message.set_status(Message.SPAM, self.request.user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)
