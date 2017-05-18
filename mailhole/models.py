@@ -274,7 +274,10 @@ class Message(models.Model):
         try:
             header_end = message_bytes.index(b'\r\n\r\n') + 4
         except ValueError:
-            raise ValidationError('Message must contain CR LF CR LF')
+            if message_bytes.endswith(b'\r\n'):
+                header_end = len(message_bytes)
+            else:
+                raise ValidationError('Message must contain CR LF CR LF')
         try:
             self.headers = message_bytes[:header_end].decode('ascii')
         except UnicodeDecodeError:
