@@ -124,6 +124,9 @@ class FilterRule(models.Model):
                   'starter med hegn (#).')
     action = models.CharField(max_length=30, choices=ACTION)
 
+    def __str__(self):
+        return '%s (%s)' % (self.pattern, self.get_kind_display())
+
     class Meta:
         ordering = ['order']
 
@@ -222,6 +225,10 @@ class Message(models.Model):
     filtered_by = models.ForeignKey(FilterRule, on_delete=models.SET_NULL,
                                     blank=True, null=True)
     status_on = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return '<Message %s %r>' % (self.created_time.isoformat(),
+                                    self.subject())
 
     @classmethod
     def create(cls, peer, mail_from, rcpt_to, message_bytes):
@@ -396,6 +403,10 @@ class SentMessage(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL,
                                    null=True, blank=True)
+
+    def __str__(self):
+        return '<SentMessage %s %s>' % (self.created_time.isoformat(),
+                                        self.message.subject)
 
     @classmethod
     def create_and_send(cls, message, user, recipient=None):
