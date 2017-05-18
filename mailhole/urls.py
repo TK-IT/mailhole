@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     url(r'^$', mailhole.views.MailboxList.as_view(), name='mailbox_list'),
+    url(r'^log/$', mailhole.views.Log.as_view(), name='log'),
     url(r'^login/$', mailhole.views.LoginView.as_view(), name='login'),
     url(r'^api/submit/$', mailhole.views.Submit.as_view(), name='submit'),
     url(r'^(?P<mailbox>[^/]+@[^/]+)/$',

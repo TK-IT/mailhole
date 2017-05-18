@@ -2,6 +2,9 @@
 {% block title %}Modtager-adresser{% endblock %}
 {% block content %}
 <h1>Modtager-adresser</h1>
+{% if user.is_superuser %}
+<p><a href="{% url 'log' %}">Log</a></p>
+{% endif %}
 <ul>
     <li>Alle
         <ul>

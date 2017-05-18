@@ -2,12 +2,13 @@ import logging
 
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.http import (
     HttpResponseBadRequest, HttpResponse, HttpResponseNotFound,
 )
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, FormView
+from django.views.generic import TemplateView, FormView, View
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import AccessMixin
@@ -42,6 +43,13 @@ class SingleMailboxRequiredMixin(AccessMixin):
             self.mailbox = qs.get(email=kwargs['mailbox'])
         except Mailbox.DoesNotExist:
             return HttpResponseNotFound()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class SuperuserRequiredMixin(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -216,3 +224,11 @@ class Submit(FormView):
             return self.form_invalid(form)
         message.filter_incoming()
         return HttpResponse('250 OK')
+
+
+class Log(SuperuserRequiredMixin, View):
+    def get(self, request):
+        filename = settings.LOGGING['handlers']['file']['filename']
+        with open(filename, encoding='utf8') as fp:
+            s = fp.read()
+        return HttpResponse(s, content_type='text/plain; charset=utf8')
