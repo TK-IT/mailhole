@@ -206,7 +206,7 @@ class FilterRule(models.Model):
         if test is None:
             raise Exception('FilterRule.filter_message failed')
         filter.save()
-        logger.info('Whitelist filter:%s created by user:%s:%s for %r',
+        logger.info('Whitelist filter:%s created by user:%s (%s) for %r',
                     filter.pk, user.pk, user.username, from_)
 
 
