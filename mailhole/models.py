@@ -293,6 +293,6 @@ class SentMessage(models.Model):
                                    created_by=user)
         sent_message.clean()
         email_backend = django.core.mail.get_connection()
-        message = UnsafeEmailMessage(message.message, recipient)
-        email_backend.send_messages([message])
+        email_message = UnsafeEmailMessage(message.message, recipient)
+        email_backend.send_messages([email_message])
         sent_message.save()
