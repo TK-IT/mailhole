@@ -116,8 +116,8 @@ class Message(models.Model):
     # RFC 5321 §4.5.3.1.3 Max sender/recipient length is 256 octets
     mail_from = models.CharField(max_length=256)
     rcpt_to = models.CharField(max_length=256)
-    message_file = models.FileField(upload_to=message_upload_to, null=True)
-    headers = models.TextField(null=True)
+    message_file = models.FileField(upload_to=message_upload_to)
+    headers = models.TextField()
     body_text_bytes = models.BinaryField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS,
