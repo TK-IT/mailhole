@@ -181,7 +181,7 @@ class FilterRule(models.Model):
             raise Exception(self.kind)
 
     def match_string(self, text):
-        return bool(re.search(self.pattern, text))
+        return bool(re.search(self.pattern, text, re.I))
 
 
 class DjangoMessage(MIMEMixin, email.message.Message):
