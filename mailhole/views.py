@@ -205,12 +205,13 @@ class Submit(FormView):
             # Message.create logs the action
             form.cleaned_data['message_bytes'].open('rb')
             message_bytes = form.cleaned_data['message_bytes'].read()
-            Message.create(peer=form.cleaned_data['peer'],
-                           mail_from=form.cleaned_data['mail_from'],
-                           rcpt_to=form.cleaned_data['rcpt_to'],
-                           message_bytes=message_bytes)
+            message = Message.create(peer=form.cleaned_data['peer'],
+                                     mail_from=form.cleaned_data['mail_from'],
+                                     rcpt_to=form.cleaned_data['rcpt_to'],
+                                     message_bytes=message_bytes)
         except ValidationError as exn:
             # form_invalid logs the error
             form.add_error(exn)
             return self.form_invalid(form)
+        message.filter_incoming()
         return HttpResponse('250 OK')

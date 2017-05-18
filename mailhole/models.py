@@ -1,3 +1,4 @@
+import re
 import email
 import logging
 
@@ -90,6 +91,94 @@ class Peer(models.Model):
             return cls.objects.get(key=key)
         except cls.DoesNotExist:
             raise ValidationError('Invalid peer key')
+
+
+class FilterRule(models.Model):
+    SUBJECT_MATCH = 'subject_match'
+    SENDER_MATCH = 'sender_match'
+    HEADER_MATCH = 'header_match'
+
+    KIND = [
+        (SUBJECT_MATCH, 'Subject regex search'),
+        (SENDER_MATCH, 'Sender regex search'),
+        (HEADER_MATCH, 'Header regex match'),
+    ]
+
+    MARK_SPAM = 'spam'
+    FORWARD = 'forward'
+
+    ACTION = [
+        (MARK_SPAM, 'Markér som spam'),
+        (FORWARD, 'Videresend'),
+    ]
+
+    order = models.IntegerField()
+    peer = models.ForeignKey(Peer, on_delete=models.CASCADE,
+                             blank=True, null=True,
+                             help_text='Blank betyder "alle servere"')
+    kind = models.CharField(max_length=30, choices=KIND)
+    pattern = models.CharField(max_length=200)
+    examples = models.TextField(
+        help_text='Eksempel-matches, én per linje. Linjer der starter med ' +
+                  'udråbstegn (!) er negative eksempler. Kommentarer ' +
+                  'starter med hegn (#).')
+    action = models.CharField(max_length=30, choices=ACTION)
+
+    class Meta:
+        ordering = ['order']
+
+    def clean(self):
+        if self.pattern:
+            try:
+                re.compile(self.pattern)
+            except re.error as exn:
+                raise ValidationError('Ugyldig pattern: %s' % (exn,))
+            failed = []
+            for line in self.examples.splitlines():
+                if not line or line.startswith('#'):
+                    continue
+                if line.startswith('!'):
+                    example = line[1:]
+                    expect = False
+                else:
+                    example = line
+                    expect = True
+                got = self.match_string(example)
+                if got is not expect:
+                    failed.append(line)
+            if failed:
+                raise ValidationError('Eksempel fejlede: %r' % (failed,))
+
+    @classmethod
+    def filter_message(cls, filters, message):
+        '''
+        messages is a Message object. filters is a sequence of FilterRules.
+
+        Returns the first filter that matches, if any.
+
+        Filters are applied in the order given and stops at first match.
+        '''
+        sender = message.mail_from
+        headers = message.parsed_headers
+        subject = headers.get('Subject') or ''
+        header_strs = ['%s: %s' % (k, decode_any_header(v))
+                       for k, v in headers.items()]
+        for filter in filters:
+            if filter._match_message(sender, subject, header_strs):
+                return filter
+
+    def _match_message(self, sender, subject, header_strs):
+        if self.kind == FilterRule.SUBJECT_MATCH:
+            return self.match_string(subject)
+        elif self.kind == FilterRule.SENDER_MATCH:
+            return self.match_string(sender)
+        elif self.kind == FilterRule.HEADER_MATCH:
+            return any(map(self.match_string, header_strs))
+        else:
+            raise Exception(self.kind)
+
+    def match_string(self, text):
+        return bool(re.search(self.pattern, text))
 
 
 class DjangoMessage(MIMEMixin, email.message.Message):
@@ -256,6 +345,29 @@ class Message(models.Model):
         self.status_by = user
         self.status_on = timezone.now()
 
+    def filter_incoming(self):
+        '''
+        Apply any applicable FilterRules to message.
+        '''
+        filters = (FilterRule.objects.filter(peer=None) |
+                   FilterRule.objects.filter(peer=self.peer))
+        filters = filters.order_by('order')
+        filter = FilterRule.filter_message(filters, self)
+        if filter is None:
+            return
+        logger.info('message:%s from peer:%s:%s matches filter:%s => %s',
+                    self.pk, self.peer_id, self.peer.slug,
+                    filter.pk, filter.action)
+        if filter.action == FilterRule.MARK_SPAM:
+            self.set_status(Message.SPAM, user=None)
+            self.save()
+        elif filter.action == FilterRule.FORWARD:
+            self.set_status(Message.TRASH, user=None)
+            self.save()
+            SentMessage.create_and_send(self, user=None)
+        else:
+            raise Exception(filter.action)
+
 
 class UnsafeEmailMessage(EmailMessage):
     def __init__(self, message, recipient):
@@ -280,14 +392,15 @@ class SentMessage(models.Model):
     recipient = models.CharField(max_length=256)
     created_time = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL,
-                                   null=True, blank=False)
+                                   null=True, blank=True)
 
     @classmethod
     def create_and_send(cls, message, user, recipient=None):
         if recipient is None:
             recipient = message.rcpt_to
         logger.info('user:%s (%s) message:%s forwarded to <%s>',
-                    user.pk, user.username, message.pk, recipient)
+                    user and user.pk, user and user.username,
+                    message.pk, recipient)
         sent_message = SentMessage(message=message,
                                    recipient=recipient,
                                    created_by=user)
