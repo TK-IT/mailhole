@@ -211,7 +211,7 @@ class Submit(FormView):
                                      message_bytes=message_bytes)
         except ValidationError as exn:
             # form_invalid logs the error
-            form.add_error(exn)
+            form.add_error(None, exn)
             return self.form_invalid(form)
         message.filter_incoming()
         return HttpResponse('250 OK')
