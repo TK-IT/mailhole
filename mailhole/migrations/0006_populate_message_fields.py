@@ -20,6 +20,19 @@ def populate_message_fields(apps, schema_editor):
         message.save()
 
 
+def populate_message_bytes(apps, schema_editor):
+    Message = apps.get_model('mailhole', 'Message')
+
+    import mailhole.models
+
+    for message in Message.objects.all():
+        if message.message_bytes:
+            continue
+        message.message_file.open('rb')
+        message.message_bytes = message.message_file.read()
+        message.save()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -27,5 +40,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_message_fields),
+        migrations.RunPython(populate_message_fields,
+                             populate_message_bytes),
     ]

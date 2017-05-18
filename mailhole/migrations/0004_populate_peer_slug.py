@@ -25,5 +25,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_peer_slug),
+        migrations.RunPython(populate_peer_slug, lambda *a: None),
     ]
