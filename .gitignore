@@ -2,3 +2,4 @@
 /mailhole/settings/__init__.py
 /venv
 __pycache__
+/django.log
