@@ -125,3 +125,37 @@ LOGIN_URL = '/login/'
 
 SITE_NAME = 'mail.tket.dk'
 MANAGER_NAME = 'Mathias Rav'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': ('[%(asctime)s %(name)s %(levelname)s] ' +
+                       '%(message)s'),
+        },
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.handlers.WatchedFileHandler',
+            'filename': os.path.join(BASE_DIR, 'django.log'),
+            'formatter': 'simple',
+        },
+        # 'mail_admins': {
+        #     'level': 'ERROR',
+        #     'class': 'django.utils.log.AdminEmailHandler',
+        # },
+    },
+    'loggers': {
+        'django': {
+            # 'handlers': ['file', 'mail_admins'],
+            'handlers': ['file'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'),
+        },
+        'mailhole': {
+            # 'handlers': ['file', 'mail_admins'],
+            'handlers': ['file'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+        },
+    },
+}
