@@ -15,9 +15,11 @@
 {% if inbox %}
 <p>
 Markér emails som <b>Spam</b> for at sende dem til spammappen,
-eller markér <b>Send</b> for at videresende dem til {{ mailbox.email }} og slette dem,
+eller markér <b>Send</b> for at videresende dem til
+{% if all %}den rette modtager{% else %}{{ mailbox.email }}{% endif %} og slette dem,
 eller markér <b>Slet</b> hvis du bare vil slette dem.
 </p>
+<p>Markér <b>Send altid</b> for at videresende og oprette en regel.</p>
 <p>
 <b>Du må ikke videresende spam-mails!</b>
 Hvis du er i tvivl, så læs mailen inden du videresender den.
@@ -32,6 +34,7 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
 {% if inbox %}
 <th>Spam</th>
 <th>Send</th>
+<th>Send altid</th>
 <th>Slet</th>
 {% endif %}
 <th>Fra</th>
@@ -45,6 +48,7 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
     {% if inbox %}
     <td>{{ message.form.spam }}</td>
     <td>{{ message.form.forward }}</td>
+    <td>{{ message.form.whitelist }}</td>
     <td>{{ message.form.trash }}</td>
     {% endif %}
     <td>{{ message.from_ }}</td>

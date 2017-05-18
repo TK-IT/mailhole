@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth import forms as auth_forms
 
 from mailhole.models import (
-    Peer, Message, SentMessage,
+    Peer, Message, SentMessage, FilterRule,
 )
 
 
@@ -40,12 +40,18 @@ class MessageListForm(forms.Form):
         for message in self.messages:
             spam_k = 'spam_%s' % message.pk
             forward_k = 'forward_%s' % message.pk
+            whitelist_k = 'whitelist_%s' % message.pk
             trash_k = 'trash_%s' % message.pk
             self.fields[spam_k] = forms.BooleanField(required=False)
             self.fields[forward_k] = forms.BooleanField(required=False)
+            self.fields[whitelist_k] = forms.BooleanField(required=False)
             self.fields[trash_k] = forms.BooleanField(required=False)
-            message.form = dict(spam=self[spam_k], forward=self[forward_k],
-                                trash=self[trash_k])
+            message.form = dict(
+                spam=self[spam_k],
+                forward=self[forward_k],
+                whitelist=self[whitelist_k],
+                trash=self[trash_k],
+            )
 
     def clean(self):
         by_pk = {}
@@ -66,6 +72,7 @@ class MessageListForm(forms.Form):
         for message in self.messages:
             spam_k = 'spam_%s' % message.pk
             forward_k = 'forward_%s' % message.pk
+            whitelist_k = 'whitelist_%s' % message.pk
             trash_k = 'trash_%s' % message.pk
             if self.cleaned_data[spam_k]:
                 logger.info('user:%s (%s) message:%s marked spam',
@@ -77,11 +84,14 @@ class MessageListForm(forms.Form):
                             user.pk, user.username, message.pk)
                 message.set_status(Message.TRASH, user=user)
                 message.save()
-            if self.cleaned_data[forward_k]:
+            if self.cleaned_data[forward_k] or self.cleaned_data[whitelist_k]:
                 # SentMessage.create_and_send logs the action
                 SentMessage.create_and_send(message=message, user=user)
                 message.set_status(Message.TRASH, user=user)
                 message.save()
+            if self.cleaned_data[whitelist_k]:
+                # FilterRule.whitelist_from logs the action
+                FilterRule.whitelist_from(message, user)
 
 
 class MessageDetailForm(forms.Form):

@@ -6,6 +6,7 @@ import django.core.mail
 from django.core.mail import EmailMessage
 from django.core.mail.message import MIMEMixin
 from django.db import models
+from django.db.models import Max
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -124,6 +125,10 @@ class FilterRule(models.Model):
                   'starter med hegn (#).')
     action = models.CharField(max_length=30, choices=ACTION)
 
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL,
+                                   blank=False, null=True)
+    created_time = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return '%s (%s)' % (self.pattern, self.get_kind_display())
 
@@ -182,6 +187,23 @@ class FilterRule(models.Model):
 
     def match_string(self, text):
         return bool(re.search(self.pattern, text, re.I))
+
+    @classmethod
+    def whitelist_from(cls, message, user):
+        order = cls.objects.all().aggregate(order=Max('order'))['order'] + 1
+        from_ = message.from_()
+        filter = cls(order=order,
+                     kind=FilterRule.HEADER_MATCH,
+                     pattern='^From: %s$' % re.escape(from_),
+                     examples='From: %s' % (from_,),
+                     action=FilterRule.FORWARD,
+                     created_by=user)
+        test = FilterRule.filter_message([filter], message)
+        if test is None:
+            raise Exception('FilterRule.filter_message failed')
+        filter.save()
+        logger.info('Whitelist filter:%s created by user:%s:%s for %r',
+                    filter.pk, user.pk, user.username, from_)
 
 
 class DjangoMessage(MIMEMixin, email.message.Message):
