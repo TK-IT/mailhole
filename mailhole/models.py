@@ -219,6 +219,8 @@ class Message(models.Model):
                               default=INBOX)
     status_by = models.ForeignKey(User, on_delete=models.SET_NULL,
                                   blank=True, null=True)
+    filtered_by = models.ForeignKey(FilterRule, on_delete=models.SET_NULL,
+                                    blank=True, null=True)
     status_on = models.DateTimeField(blank=True, null=True)
 
     @classmethod
@@ -340,9 +342,10 @@ class Message(models.Model):
         o = cls(status=status)
         return o.get_status_display()
 
-    def set_status(self, status, *, user=None):
+    def set_status(self, status, *, user=None, filter=None):
         self.status = status
         self.status_by = user
+        self.filtered_by = filter
         self.status_on = timezone.now()
 
     def filter_incoming(self):
@@ -359,10 +362,10 @@ class Message(models.Model):
                     self.pk, self.peer_id, self.peer.slug,
                     filter.pk, filter.action)
         if filter.action == FilterRule.MARK_SPAM:
-            self.set_status(Message.SPAM)
+            self.set_status(Message.SPAM, filter=filter)
             self.save()
         elif filter.action == FilterRule.FORWARD:
-            self.set_status(Message.TRASH)
+            self.set_status(Message.TRASH, filter=filter)
             self.save()
             SentMessage.create_and_send(self, user=None)
         else:
