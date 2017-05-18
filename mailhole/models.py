@@ -1,4 +1,5 @@
 import email
+import logging
 
 import django.core.mail
 from django.core.mail import EmailMessage
@@ -12,6 +13,9 @@ from django.utils import html, timezone
 
 from mailhole.utils import html_to_plain, decode_any_header
 import email.utils
+
+
+logger = logging.getLogger('mailhole')
 
 
 class Mailbox(models.Model):
@@ -39,6 +43,8 @@ class Mailbox(models.Model):
             mailbox = cls(email=email)
             mailbox.clean()
             mailbox.save()
+            logger.info('mailbox:%s:%s created by peer:%s:%s',
+                        mailbox.pk, mailbox.email, peer and peer.pk, peer)
             if peer is not None:
                 for r in peer.default_readers.all():
                     mailbox.readers.add(r)
@@ -128,6 +134,7 @@ class Message(models.Model):
 
     @classmethod
     def create(cls, peer, mail_from, rcpt_to, message_bytes):
+        # Mailbox.get_or_create logs the create_mailbox action
         mailbox = Mailbox.get_or_create(rcpt_to, peer)
         message = cls(mailbox=mailbox, peer=peer,
                       mail_from=mail_from,
@@ -279,6 +286,8 @@ class SentMessage(models.Model):
     def create_and_send(cls, message, user, recipient=None):
         if recipient is None:
             recipient = message.rcpt_to
+        logger.info('user:%s (%s) message:%s forwarded to <%s>',
+                    user.pk, user.username, message.pk, recipient)
         sent_message = SentMessage(message=message,
                                    recipient=recipient,
                                    created_by=user)

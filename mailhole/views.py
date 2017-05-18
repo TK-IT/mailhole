@@ -1,3 +1,5 @@
+import logging
+
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.utils.decorators import method_decorator
@@ -16,6 +18,9 @@ from mailhole.models import (
 from mailhole.forms import (
     AuthenticationForm, SubmitForm, MessageListForm, MessageDetailForm,
 )
+
+
+logger = logging.getLogger('mailhole')
 
 
 class MailboxRequiredMixin(AccessMixin):
@@ -95,6 +100,7 @@ class MessageList(MailboxRequiredMixin, FormView):
         return context_data
 
     def form_valid(self, form):
+        # form.save logs the action(s)
         form.save(self.request.user)
         return redirect(self.request.path)
 
@@ -121,6 +127,7 @@ class MailboxMessageList(SingleMailboxRequiredMixin, FormView):
         return context_data
 
     def form_valid(self, form):
+        # form.save logs the action(s)
         form.save(self.request.user)
         return redirect(self.request.path)
 
@@ -146,6 +153,7 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
         fresh_form = MessageDetailForm()
         message = self.get_object()
         if form.cleaned_data['send']:
+            # SentMessage.create_and_send logs the action
             recipient = form.cleaned_data['recipient']
             SentMessage.create_and_send(message=message,
                                         user=self.request.user,
@@ -155,11 +163,15 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
 
         return_to = message.status
         if form.cleaned_data['trash']:
+            logger.info('user:%s (%s) message:%s marked trash',
+                        user.pk, user.username, message.pk)
             message.set_status(Message.TRASH, self.request.user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
                             status=return_to)
         if form.cleaned_data['spam']:
+            logger.info('user:%s (%s) message:%s marked spam',
+                        user.pk, user.username, message.pk)
             message.set_status(Message.SPAM, self.request.user)
             message.save()
             return redirect('mailbox_message_list', mailbox=self.mailbox.email,
@@ -184,10 +196,13 @@ class Submit(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_invalid(self, form):
-        return HttpResponseBadRequest(form.errors.as_json())
+        json_errors = form.errors.as_json()
+        logger.warning('Submit.form_invalid(): %s', json_errors)
+        return HttpResponseBadRequest(json_errors)
 
     def form_valid(self, form):
         try:
+            # Message.create logs the action
             form.cleaned_data['message_bytes'].open('rb')
             message_bytes = form.cleaned_data['message_bytes'].read()
             Message.create(peer=form.cleaned_data['peer'],
@@ -195,6 +210,7 @@ class Submit(FormView):
                            rcpt_to=form.cleaned_data['rcpt_to'],
                            message_bytes=message_bytes)
         except ValidationError as exn:
+            # form_invalid logs the error
             form.add_error(exn)
             return self.form_invalid(form)
         return HttpResponse('250 OK')

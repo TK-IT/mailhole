@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth import forms as auth_forms
@@ -5,6 +7,9 @@ from django.contrib.auth import forms as auth_forms
 from mailhole.models import (
     Peer, Message, SentMessage,
 )
+
+
+logger = logging.getLogger('mailhole')
 
 
 class AuthenticationForm(auth_forms.AuthenticationForm):
@@ -63,12 +68,17 @@ class MessageListForm(forms.Form):
             forward_k = 'forward_%s' % message.pk
             trash_k = 'trash_%s' % message.pk
             if self.cleaned_data[spam_k]:
+                logger.info('user:%s (%s) message:%s marked spam',
+                            user.pk, user.username, message.pk)
                 message.set_status(Message.SPAM, user)
                 message.save()
             if self.cleaned_data[trash_k]:
+                logger.info('user:%s (%s) message:%s marked trash',
+                            user.pk, user.username, message.pk)
                 message.set_status(Message.TRASH, user)
                 message.save()
             if self.cleaned_data[forward_k]:
+                # SentMessage.create_and_send logs the action
                 SentMessage.create_and_send(message=message, user=user)
                 message.set_status(Message.TRASH, user)
                 message.save()
