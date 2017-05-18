@@ -230,8 +230,8 @@ class Message(models.Model):
         message = cls(mailbox=mailbox, peer=peer,
                       mail_from=mail_from,
                       rcpt_to=rcpt_to,
-                      message_file=ContentFile(message_bytes),
                       status=cls.INBOX)
+        message.message_file.save('message.msg', ContentFile(message_bytes))
         message.extract_message_data()
         message.clean()
         message.save()
