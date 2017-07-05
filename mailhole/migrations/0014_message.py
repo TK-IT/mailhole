@@ -3,13 +3,13 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import modq.models
+import mailhole.models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('modq', '0013_add_filterrule_created_fields'),
+        ('mailhole', '0013_add_filterrule_created_fields'),
     ]
 
     operations = [
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
             model_name='message',
             name='orig_message_file',
             field=models.FileField(
-                null=True, upload_to=modq.models.orig_message_upload_to),
+                null=True, upload_to=mailhole.models.orig_message_upload_to),
         ),
         migrations.AddField(
             model_name='message',
