@@ -212,12 +212,7 @@ class Submit(FormView):
     def form_valid(self, form):
         try:
             # Message.create logs the action
-            form.cleaned_data['message_bytes'].open('rb')
-            message_bytes = form.cleaned_data['message_bytes'].read()
-            message = Message.create(peer=form.cleaned_data['peer'],
-                                     mail_from=form.cleaned_data['mail_from'],
-                                     rcpt_to=form.cleaned_data['rcpt_to'],
-                                     message_bytes=message_bytes)
+            message = form.save()
         except ValidationError as exn:
             # form_invalid logs the error
             form.add_error(None, exn)

@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django import forms
@@ -24,12 +25,43 @@ class AuthenticationForm(auth_forms.AuthenticationForm):
 class SubmitForm(forms.Form):
     key = forms.CharField()
     mail_from = forms.CharField()
-    rcpt_to = forms.CharField()
+    rcpt_tos = forms.CharField()
     message_bytes = forms.FileField()
+    orig_mail_from = forms.CharField()
+    orig_rcpt_to = forms.CharField()
+    orig_message_bytes = forms.FileField()
+
+    def clean_orig_rcpt_to(self):
+        v = self.cleaned_data['orig_rcpt_to']
+        try:
+            orig_rcpt_to = json.loads(v)
+        except ValueError:
+            raise forms.ValidationError('Invalid JSON')
+        if not isinstance(orig_rcpt_to, list):
+            raise forms.ValidationError('JSON is not a list')
+        if not all(isinstance(r, str) for r in orig_rcpt_to):
+            raise forms.ValidationError('JSON is not a list of strs')
+        return orig_rcpt_to
 
     def clean(self):
         key = self.cleaned_data.pop('key')
         self.cleaned_data['peer'] = Peer.validate(key)
+
+    def save(self):
+        self.cleaned_data['message_bytes'].open('rb')
+        message_bytes = self.cleaned_data['message_bytes'].read()
+        self.cleaned_data['orig_message_bytes'].open('rb')
+        orig_message_bytes = self.cleaned_data['orig_message_bytes'].read()
+        message = Message.create(
+            peer=self.cleaned_data['peer'],
+            mail_from=self.cleaned_data['mail_from'],
+            rcpt_tos=self.cleaned_data['rcpt_tos'],
+            message_bytes=message_bytes,
+            orig_mail_from=self.cleaned_data['orig_mail_from'],
+            orig_rcpt_to=self.cleaned_data['orig_rcpt_to'],
+            orig_message_bytes=orig_message_bytes,
+        )
+        return message
 
 
 class MessageListForm(forms.Form):
@@ -65,8 +97,8 @@ class MessageListForm(forms.Form):
                 continue
             if by_pk.setdefault(pk, mode) != mode:
                 raise forms.ValidationError(
-                    'Du må ikke markere mere end én boks ved en mail (%s %s %s)' %
-                    (pk, by_pk[pk], mode))
+                    'Du må ikke markere mere end én boks ved en mail ' +
+                    '(%s %s %s)' % (pk, by_pk[pk], mode))
 
     def save(self, user):
         for message in self.messages:

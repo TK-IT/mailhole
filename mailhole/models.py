@@ -166,7 +166,7 @@ class FilterRule(models.Model):
 
         Filters are applied in the order given and stops at first match.
         '''
-        sender = message.mail_from
+        sender = message.orig_mail_from
         headers = message.parsed_headers
         subject = headers.get('Subject') or ''
         header_strs = ['%s: %s' % (k, decode_any_header(v))
@@ -214,12 +214,17 @@ class DjangoMessage(MIMEMixin, email.message.Message):
     pass
 
 
-def message_upload_to(message: 'Message', filename):
-    return 'messages/{peer}/{mailbox}/{now}.mail'.format(
+def message_upload_to(message: 'Message', filename, suffix=''):
+    return 'messages/{peer}/{mailbox}/{now}{suffix}.mail'.format(
         peer=message.peer.slug,
         mailbox=message.mailbox.email,
         now=timezone.now().isoformat().replace(':', '_'),
+        suffix=suffix,
     )
+
+
+def orig_message_upload_to(message: 'Message', filename):
+    return message_upload_to(message, filename, '_orig')
 
 
 class Message(models.Model):
@@ -239,8 +244,14 @@ class Message(models.Model):
     peer = models.ForeignKey(Peer, on_delete=models.CASCADE)
     # RFC 5321 §4.5.3.1.3 Max sender/recipient length is 256 octets
     mail_from = models.CharField(max_length=256)
-    rcpt_to = models.CharField(max_length=256)
+    rcpt_tos = models.TextField(blank=False)
+    orig_mail_from = models.CharField(max_length=256,
+                                      blank=False, null=True)
+    orig_rcpt_to = models.CharField(max_length=256,
+                                    blank=False, null=True)
     message_file = models.FileField(upload_to=message_upload_to)
+    orig_message_file = models.FileField(upload_to=orig_message_upload_to,
+                                         blank=False, null=True)
     headers = models.TextField()
     body_text_bytes = models.BinaryField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
@@ -257,20 +268,25 @@ class Message(models.Model):
                                     self.subject())
 
     @classmethod
-    def create(cls, peer, mail_from, rcpt_to, message_bytes):
+    def create(cls, peer, mail_from, rcpt_tos, message_bytes,
+               orig_mail_from, orig_rcpt_to, orig_message_bytes):
         # Mailbox.get_or_create logs the create_mailbox action
-        mailbox = Mailbox.get_or_create(rcpt_to, peer)
+        mailbox = Mailbox.get_or_create(rcpt_tos, peer)
         message = cls(mailbox=mailbox, peer=peer,
                       mail_from=mail_from,
-                      rcpt_to=rcpt_to,
-                      status=cls.INBOX)
+                      rcpt_tos=rcpt_tos,
+                      status=cls.INBOX,
+                      orig_mail_from=orig_mail_from,
+                      orig_rcpt_to=orig_rcpt_to)
         message.message_file.save('message.msg', ContentFile(message_bytes))
+        message.orig_message_file.save('orig_message.msg',
+                                       ContentFile(orig_message_bytes))
         message.extract_message_data()
         message.clean()
         message.save()
         logger.info("message:%s peer:%s Subject: %r From: %s To: %s",
                     message.pk, peer.slug, str(message.subject()),
-                    message.from_address(), message.rcpt_to)
+                    message.from_address(), message.orig_rcpt_to)
         return message
 
     @property
@@ -281,6 +297,20 @@ class Message(models.Model):
             self._parsed_headers = (
                 email.message_from_string(self.headers, DjangoMessage))
             return self._parsed_headers
+
+    @property
+    def orig_message(self):
+        try:
+            return self._orig_message
+        except AttributeError:
+            if self.orig_message_file is None:
+                self._orig_message = self.message
+            else:
+                self.orig_message_file.open('rb')
+                self._orig_message = email.message_from_binary_file(
+                    self.orig_message_file, DjangoMessage)
+                self.orig_message_file.close()
+            return self._orig_message
 
     @property
     def message(self):
@@ -296,10 +326,10 @@ class Message(models.Model):
     @staticmethod
     def _extract_message_data(self):
         '''
-        Set self.headers and self.body_text from self.message_file.
+        Set self.headers and self.body_text from self.orig_message_file.
         '''
-        self.message_file.open('rb')
-        message_bytes = self.message_file.read()
+        self.orig_message_file.open('rb')
+        message_bytes = self.orig_message_file.read()
         try:
             header_end = message_bytes.index(b'\r\n\r\n') + 4
         except ValueError:
@@ -316,7 +346,7 @@ class Message(models.Model):
         except Exception:
             raise ValidationError('Could not parse message')
         self.body_text = Message._get_body_text(self, message)
-        self.message_file.close()
+        self.orig_message_file.close()
 
     def extract_message_data(self):
         self._extract_message_data(self)
