@@ -40,7 +40,7 @@ class SingleMailboxRequiredMixin(AccessMixin):
             return self.handle_no_permission()
         qs = Mailbox.visible_to_user(request.user)
         try:
-            self.mailbox = qs.get(email=kwargs['mailbox'])
+            self.mailbox = qs.get(name=kwargs['mailbox'])
         except Mailbox.DoesNotExist:
             return HttpResponseNotFound()
         return super().dispatch(request, *args, **kwargs)

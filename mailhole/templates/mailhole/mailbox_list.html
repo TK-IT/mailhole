@@ -14,7 +14,7 @@
         </ul>
     </li>
     {% for mailbox in object_list %}
-    <li>{{ mailbox.email }}
+    <li>{{ mailbox }}
         <ul>
             {% for key, label, url, qs in mailbox.folders %}
             <li><a href="{{ url }}">{{ label }}</a> ({{ qs.count }})</li>

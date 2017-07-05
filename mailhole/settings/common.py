@@ -150,7 +150,7 @@ LOGGING = {
         'django': {
             # 'handlers': ['file', 'mail_admins'],
             'handlers': ['file'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'),
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
         },
         'mailhole': {
             # 'handlers': ['file', 'mail_admins'],

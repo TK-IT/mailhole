@@ -1,9 +1,9 @@
 {% extends 'mailhole/base.html' %}
 {% block title %}{{ message.subject|default:BLANK_SUBJECT }}{% endblock %}
 {% block nav %}
-<a href="{% url 'mailbox_detail' mailbox=message.mailbox.email %}">
+<a href="{% url 'mailbox_detail' mailbox=message.mailbox.name %}">
     {{ message.mailbox }}</a>
-<a href="{% url 'mailbox_message_list' mailbox=message.mailbox.email status=message.status %}">
+<a href="{% url 'mailbox_message_list' mailbox=message.mailbox.name status=message.status %}">
     {{ message.get_status_display }}</a>
 {% endblock %}
 {% block content %}

@@ -31,7 +31,7 @@ class Mailbox(models.Model):
     readers = models.ManyToManyField(User)
 
     def __str__(self):
-        return self.email
+        return self.name or self.email
 
     @classmethod
     def get_or_create(cls, orig_rcpt_tos, peer=None):
@@ -76,13 +76,13 @@ class Mailbox(models.Model):
     def folders(self):
         for key, label in Message.STATUS:
             url = reverse('mailbox_message_list',
-                          kwargs=dict(mailbox=self.email, status=key))
+                          kwargs=dict(mailbox=self.name, status=key))
             qs = self.message_set.filter(status=key)
             yield key, label, url, qs
 
     def get_absolute_url(self):
         return reverse('mailbox_detail',
-                       kwargs=dict(mailbox=self.email))
+                       kwargs=dict(mailbox=self.name))
 
 
 class Peer(models.Model):
@@ -414,7 +414,7 @@ class Message(models.Model):
 
     def get_absolute_url(self):
         return reverse('message_detail',
-                       kwargs=dict(mailbox=self.mailbox.email,
+                       kwargs=dict(mailbox=self.mailbox.name,
                                    pk=self.pk))
 
     @staticmethod

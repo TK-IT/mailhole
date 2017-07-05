@@ -27,7 +27,7 @@ class MailboxAdmin(admin.ModelAdmin):
     def messages(self, o):
         return html.format_html(
             '<a href="{}">{}</a>',
-            reverse('mailbox_detail', kwargs=dict(mailbox=o.email)),
+            reverse('mailbox_detail', kwargs=dict(mailbox=o.name)),
             o.messages)
 
     def most_recent_message(self, o):
