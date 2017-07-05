@@ -60,7 +60,7 @@ class MailboxList(MailboxRequiredMixin, TemplateView):
         # TODO make self.mailboxes available in dispatch
         if len(self.mailboxes) == 1:
             mailbox, = self.mailboxes
-            return redirect('mailbox_message_list', mailbox=mailbox.email,
+            return redirect('mailbox_message_list', mailbox=mailbox.name,
                             status=Message.INBOX)
         return super().get(request, *args, **kwargs)
 
@@ -176,14 +176,14 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
                         user.pk, user.username, message.pk)
             message.set_status(Message.TRASH, user=user)
             message.save()
-            return redirect('mailbox_message_list', mailbox=self.mailbox.email,
+            return redirect('mailbox_message_list', mailbox=self.mailbox.name,
                             status=return_to)
         if form.cleaned_data['spam']:
             logger.info('user:%s (%s) message:%s marked spam',
                         user.pk, user.username, message.pk)
             message.set_status(Message.SPAM, user=user)
             message.save()
-            return redirect('mailbox_message_list', mailbox=self.mailbox.email,
+            return redirect('mailbox_message_list', mailbox=self.mailbox.name,
                             status=return_to)
         return HttpResponseBadRequest(
             'Du skal trykke enten Send, Trash eller Spam')
