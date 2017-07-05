@@ -451,6 +451,9 @@ class Message(models.Model):
         else:
             raise Exception(filter.action)
 
+    def recipients(self):
+        return self.rcpt_tos.split(',')
+
 
 class UnsafeEmailMessage(EmailMessage):
     def __init__(self, message, recipient):
@@ -484,15 +487,18 @@ class SentMessage(models.Model):
     @classmethod
     def create_and_send(cls, message, user, recipient=None):
         if recipient is None:
-            recipient = message.rcpt_to
-        logger.info('user:%s (%s) message:%s forwarded to <%s>',
-                    user and user.pk, user and user.username,
-                    message.pk, recipient)
-        sent_message = SentMessage(message=message,
-                                   recipient=recipient,
-                                   created_by=user)
-        sent_message.clean()
-        email_backend = django.core.mail.get_connection()
-        email_message = UnsafeEmailMessage(message.message, recipient)
-        email_backend.send_messages([email_message])
-        sent_message.save()
+            recipients = message.recipients
+        else:
+            recipients = [recipient]
+        for r in recipients:
+            logger.info('user:%s (%s) message:%s forwarded to <%s>',
+                        user and user.pk, user and user.username,
+                        message.pk, r)
+            sent_message = SentMessage(message=message,
+                                       recipient=r,
+                                       created_by=user)
+            sent_message.clean()
+            email_backend = django.core.mail.get_connection()
+            email_message = UnsafeEmailMessage(message.message, r)
+            email_backend.send_messages([email_message])
+            sent_message.save()
