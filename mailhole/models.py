@@ -26,6 +26,7 @@ class Mailbox(models.Model):
     '''
     # NOTE: This requires MySQL database charset utf8 instead of utf8mb4.
     email = models.EmailField(unique=True)
+    name = models.CharField(max_length=100, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     readers = models.ManyToManyField(User)
 
@@ -33,20 +34,29 @@ class Mailbox(models.Model):
         return self.email
 
     @classmethod
-    def get_or_create(cls, email, peer=None):
+    def get_or_create(cls, orig_rcpt_tos, peer=None):
         '''
         If peer is given and no Mailbox with email exists, readers are added
         based on peer.default_readers.
         '''
-        email = email.lower()
+        if not isinstance(orig_rcpt_tos, list):
+            raise ValueError('orig_rcpt_tos must be a list, not a %r' %
+                             (type(orig_rcpt_tos),))
+        if not all(r.count('@') == 1 for r in orig_rcpt_tos):
+            raise ValueError('Invalid email addresses: %r' % (orig_rcpt_tos,))
+        domains = set(domain.lower() for r in orig_rcpt_tos
+                      for localpart, domain in [r.split('@')])
+        if len(domains) != 1:
+            raise ValueError(domains)
+        domain, = domains
         try:
-            return cls.objects.get(email=email)
+            return cls.objects.get(name=domain)
         except cls.DoesNotExist:
-            mailbox = cls(email=email)
+            mailbox = cls(name=domain)
             mailbox.clean()
             mailbox.save()
             logger.info('mailbox:%s:%s created by peer:%s:%s',
-                        mailbox.pk, mailbox.email, peer and peer.pk, peer)
+                        mailbox.pk, mailbox.name, peer and peer.pk, peer)
             if peer is not None:
                 for r in peer.default_readers.all():
                     mailbox.readers.add(r)
@@ -231,6 +241,8 @@ class Message(models.Model):
     '''
     A message received by a Peer for one of our mailboxes.
     '''
+    RECIPIENT_SEP = ','
+
     INBOX = 'inbox'
     SPAM = 'spam'
     TRASH = 'trash'
@@ -247,8 +259,7 @@ class Message(models.Model):
     rcpt_tos = models.TextField(blank=False)
     orig_mail_from = models.CharField(max_length=256,
                                       blank=False, null=True)
-    orig_rcpt_to = models.CharField(max_length=256,
-                                    blank=False, null=True)
+    orig_rcpt_tos = models.TextField(blank=False, null=True)
     message_file = models.FileField(upload_to=message_upload_to)
     orig_message_file = models.FileField(upload_to=orig_message_upload_to,
                                          blank=False, null=True)
@@ -269,15 +280,21 @@ class Message(models.Model):
 
     @classmethod
     def create(cls, peer, mail_from, rcpt_tos, message_bytes,
-               orig_mail_from, orig_rcpt_to, orig_message_bytes):
+               orig_mail_from, orig_rcpt_tos, orig_message_bytes):
+        if not isinstance(rcpt_tos, list):
+            raise ValueError('rcpt_tos must be a list, not a %r' %
+                             (type(rcpt_tos),))
+        if not isinstance(orig_rcpt_tos, list):
+            raise ValueError('orig_rcpt_tos must be a list, not a %r' %
+                             (type(orig_rcpt_tos),))
         # Mailbox.get_or_create logs the create_mailbox action
-        mailbox = Mailbox.get_or_create(rcpt_tos, peer)
+        mailbox = Mailbox.get_or_create(orig_rcpt_tos, peer)
         message = cls(mailbox=mailbox, peer=peer,
                       mail_from=mail_from,
-                      rcpt_tos=rcpt_tos,
+                      rcpt_tos=Message.RECIPIENT_SEP.join(rcpt_tos),
                       status=cls.INBOX,
                       orig_mail_from=orig_mail_from,
-                      orig_rcpt_to=orig_rcpt_to)
+                      orig_rcpt_tos=Message.RECIPIENT_SEP.join(orig_rcpt_tos))
         message.message_file.save('message.msg', ContentFile(message_bytes))
         message.orig_message_file.save('orig_message.msg',
                                        ContentFile(orig_message_bytes))
@@ -286,7 +303,7 @@ class Message(models.Model):
         message.save()
         logger.info("message:%s peer:%s Subject: %r From: %s To: %s",
                     message.pk, peer.slug, str(message.subject()),
-                    message.from_address(), message.orig_rcpt_to)
+                    message.from_address(), message.orig_rcpt_tos)
         return message
 
     @property
@@ -452,7 +469,7 @@ class Message(models.Model):
             raise Exception(filter.action)
 
     def recipients(self):
-        return self.rcpt_tos.split(',')
+        return self.rcpt_tos.split(Message.RECIPIENT_SEP)
 
 
 class UnsafeEmailMessage(EmailMessage):
@@ -487,7 +504,7 @@ class SentMessage(models.Model):
     @classmethod
     def create_and_send(cls, message, user, recipient=None):
         if recipient is None:
-            recipients = message.recipients
+            recipients = message.recipients()
         else:
             recipients = [recipient]
         for r in recipients:

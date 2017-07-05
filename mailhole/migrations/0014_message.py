@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='message',
-            name='orig_rcpt_to',
-            field=models.CharField(max_length=256, null=True),
+            name='orig_rcpt_tos',
+            field=models.TextField(null=True),
         ),
     ]

@@ -155,7 +155,7 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
         return context_data
 
     def get_initial(self):
-        return dict(recipient=self.get_object().rcpt_to)
+        return dict(recipient=self.get_object().recipients()[0])
 
     def form_valid(self, form):
         user = self.request.user
@@ -211,7 +211,7 @@ class Submit(FormView):
 
     def form_valid(self, form):
         try:
-            # Message.create logs the action
+            # form.save() logs the action
             message = form.save()
         except ValidationError as exn:
             # form_invalid logs the error

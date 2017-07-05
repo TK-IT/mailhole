@@ -28,20 +28,28 @@ class SubmitForm(forms.Form):
     rcpt_tos = forms.CharField()
     message_bytes = forms.FileField()
     orig_mail_from = forms.CharField()
-    orig_rcpt_to = forms.CharField()
+    orig_rcpt_tos = forms.CharField()
     orig_message_bytes = forms.FileField()
 
-    def clean_orig_rcpt_to(self):
-        v = self.cleaned_data['orig_rcpt_to']
+    def _clean_rcpt_tos(self, v):
         try:
-            orig_rcpt_to = json.loads(v)
+            rcpt_tos = json.loads(v)
         except ValueError:
             raise forms.ValidationError('Invalid JSON')
-        if not isinstance(orig_rcpt_to, list):
+        if not isinstance(rcpt_tos, list):
             raise forms.ValidationError('JSON is not a list')
-        if not all(isinstance(r, str) for r in orig_rcpt_to):
+        if not all(isinstance(r, str) for r in rcpt_tos):
             raise forms.ValidationError('JSON is not a list of strs')
-        return orig_rcpt_to
+        if any(Message.RECIPIENT_SEP in r for r in rcpt_tos):
+            raise forms.ValidationError('Recipient must not contain %r' %
+                                        (Message.RECIPIENT_SEP,))
+        return rcpt_tos
+
+    def clean_rcpt_tos(self):
+        return self._clean_rcpt_tos(self.cleaned_data['rcpt_tos'])
+
+    def clean_orig_rcpt_tos(self):
+        return self._clean_rcpt_tos(self.cleaned_data['orig_rcpt_tos'])
 
     def clean(self):
         key = self.cleaned_data.pop('key')
@@ -58,7 +66,7 @@ class SubmitForm(forms.Form):
             rcpt_tos=self.cleaned_data['rcpt_tos'],
             message_bytes=message_bytes,
             orig_mail_from=self.cleaned_data['orig_mail_from'],
-            orig_rcpt_to=self.cleaned_data['orig_rcpt_to'],
+            orig_rcpt_tos=self.cleaned_data['orig_rcpt_tos'],
             orig_message_bytes=orig_message_bytes,
         )
         return message
