@@ -9,7 +9,7 @@ from mailhole.models import (
 
 @admin.register(Mailbox)
 class MailboxAdmin(admin.ModelAdmin):
-    list_display = ('email', 'reader_count', 'messages',
+    list_display = ('name', 'reader_count', 'messages',
                     'most_recent_message', 'created_time')
 
     def get_queryset(self, request):

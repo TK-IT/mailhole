@@ -25,13 +25,12 @@ class Mailbox(models.Model):
     An email user whose emails end up in our app.
     '''
     # NOTE: This requires MySQL database charset utf8 instead of utf8mb4.
-    email = models.EmailField(unique=True)
     name = models.CharField(max_length=100, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     readers = models.ManyToManyField(User)
 
     def __str__(self):
-        return self.name or self.email
+        return self.name
 
     @classmethod
     def get_or_create(cls, orig_rcpt_tos, peer=None):
@@ -227,7 +226,7 @@ class DjangoMessage(MIMEMixin, email.message.Message):
 def message_upload_to(message: 'Message', filename, suffix=''):
     return 'messages/{peer}/{mailbox}/{now}{suffix}.mail'.format(
         peer=message.peer.slug,
-        mailbox=message.mailbox.email,
+        mailbox=message.mailbox.name,
         now=timezone.now().isoformat().replace(':', '_'),
         suffix=suffix,
     )
@@ -406,8 +405,8 @@ class Message(models.Model):
             yield formatted, abbreviated
 
     def to_as_html(self):
-        return html.format_html_join(', ', '<span title="{}">{}</span>',
-                                     self.to_people())
+        return html.format_html_join(
+            ', ', '<span title="{}">{}</span>', self.to_people())
 
     def subject(self):
         return str(decode_any_header(self.parsed_headers.get('Subject') or ''))
