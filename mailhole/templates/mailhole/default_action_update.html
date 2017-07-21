@@ -1,0 +1,14 @@
+{% extends 'mailhole/base.html' %}
+{% block title %}Log ind{% endblock %}
+{% block content %}
+<h1>Automatisk videresendelse for {{ mailbox }}</h1>
+<p>
+Her kan du vælge om indkomne emails til {{ mailbox }}
+skal tilbageholdes for at blive gennemlæst
+eller automatisk videresendes.
+</p>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Gem" />
+</form>
+{% endblock %}

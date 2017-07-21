@@ -24,9 +24,19 @@ class Mailbox(models.Model):
     '''
     An email user whose emails end up in our app.
     '''
+
+    HOLD = 'hold'
+    FORWARD = 'forward'
+    ACTION = [
+        (HOLD, 'Tilbagehold'),
+        (FORWARD, 'Videresend'),
+    ]
+
     name = models.CharField(max_length=100, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     readers = models.ManyToManyField(User)
+    default_action = models.CharField(max_length=10, choices=ACTION,
+                                      default=HOLD)
 
     def __str__(self):
         return self.name
@@ -456,6 +466,12 @@ class Message(models.Model):
         filters = filters.order_by('order')
         filter = FilterRule.filter_message(filters, self)
         if filter is None:
+            if self.mailbox.default_action == Mailbox.FORWARD:
+                logger.info('message:%s from peer:%s:%s => forward (mailbox)',
+                            self.pk, self.peer_id, self.peer.slug)
+                self.set_status(Message.TRASH, filter=filter)
+                self.save()
+                SentMessage.create_and_send(self, user=None)
             return
         logger.info('message:%s from peer:%s:%s matches filter:%s => %s',
                     self.pk, self.peer_id, self.peer.slug,

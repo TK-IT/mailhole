@@ -8,7 +8,9 @@ from django.http import (
     HttpResponseBadRequest, HttpResponse, HttpResponseNotFound,
 )
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, FormView, View
+from django.views.generic import (
+    TemplateView, FormView, View, UpdateView,
+)
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import AccessMixin
@@ -227,3 +229,15 @@ class Log(SuperuserRequiredMixin, View):
         with open(filename, encoding='utf8') as fp:
             s = fp.read()
         return HttpResponse(s, content_type='text/plain; charset=utf8')
+
+
+class DefaultActionUpdate(SingleMailboxRequiredMixin, UpdateView):
+    template_name = 'mailhole/default_action_update.html'
+    model = Mailbox
+    fields = ('default_action',)
+
+    def get_object(self):
+        return self.mailbox
+
+    def get_success_url(self):
+        return reverse('mailbox_list')
