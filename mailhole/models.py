@@ -403,6 +403,10 @@ class Message(models.Model):
             formatted = '%s <%s>' % (realname, address)
             yield formatted, abbreviated
 
+    def to_as_text(self):
+        return ', '.join(formatted
+                         for formatted, abbreviated in self.to_people())
+
     def to_as_html(self):
         return html.format_html_join(
             ', ', '<span title="{}">{}</span>', self.to_people())
