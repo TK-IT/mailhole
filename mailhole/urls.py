@@ -35,6 +35,8 @@ urlpatterns = [
         mailhole.views.MailboxMessageList.as_view(), name='mailbox_message_list'),
     url(r'^(?P<mailbox>[^/]+)/(?P<pk>\d+)/$',
         mailhole.views.MessageDetail.as_view(), name='message_detail'),
+    url(r'^(?P<mailbox>[^/]+)/defaction/$',
+        mailhole.views.DefaultActionUpdate.as_view(), name='default_action_update'),
 ]
 
 if settings.DEBUG:
