@@ -4,6 +4,7 @@ from django.utils import html
 from django.core.urlresolvers import reverse
 from mailhole.models import (
     Mailbox, Peer, Message, SentMessage, FilterRule,
+    MonitorMessage,
 )
 
 
@@ -94,3 +95,8 @@ class FilterRuleAdmin(admin.ModelAdmin):
         return o.message_count
 
     message_count.admin_order_field = 'message_count'
+
+
+@admin.register(MonitorMessage)
+class MonitorMessageAdmin(admin.ModelAdmin):
+    list_display = ('created_time', 'user', 'inbox_size', 'age_days')
