@@ -521,3 +521,11 @@ class SentMessage(models.Model):
             email_message = UnsafeEmailMessage(message.message, r)
             email_backend.send_messages([email_message])
             sent_message.save()
+
+
+class MonitorMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    body = models.TextField()
+    created_time = models.DateTimeField(auto_now_add=True)
+    inbox_size = models.IntegerField()
+    age_days = models.FloatField()
