@@ -24,7 +24,6 @@ class Mailbox(models.Model):
     '''
     An email user whose emails end up in our app.
     '''
-    # NOTE: This requires MySQL database charset utf8 instead of utf8mb4.
     name = models.CharField(max_length=100, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     readers = models.ManyToManyField(User)
