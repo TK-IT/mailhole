@@ -20,8 +20,8 @@ if DATABASES['default']['ENGINE'] == 'django.db.backends.mysql':
     DATABASES['default'].setdefault('OPTIONS', {})['init_command'] = (
         "SET sql_mode='STRICT_TRANS_TABLES'")
 
-EMAIL_HOST = 'smtp01.uni.au.dk'
-SERVER_EMAIL = 'mailhole@prodekanus.studorg.au.dk'
+EMAIL_HOST = 'localhost'
+DEFAULT_FROM_EMAIL = SERVER_EMAIL = 'admin@TAAGEKAMMERET.dk'.lower()
 
 # EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 # EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'django-email')
