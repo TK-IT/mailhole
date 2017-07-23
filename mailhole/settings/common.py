@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import pwd
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
@@ -126,6 +127,9 @@ LOGIN_URL = '/login/'
 SITE_NAME = 'mail.tket.dk'
 MANAGER_NAME = 'Mathias Rav'
 
+_logfile = os.path.join(BASE_DIR,
+                        'django-%s.log' % pwd.getpwuid(os.geteuid()).pw_name)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -138,7 +142,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': os.path.join(BASE_DIR, 'django.log'),
+            'filename': _logfile,
             'formatter': 'simple',
         },
         # 'mail_admins': {

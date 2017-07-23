@@ -35,6 +35,9 @@ DEFAULT_FROM_EMAIL = SERVER_EMAIL = 'admin@TAAGEKAMMERET.dk'.lower()
 # EMAIL_USE_SSL = False
 # EMAIL_TIMEOUT = 5
 
+_logfile = os.path.join(BASE_DIR, 'prodekanus',
+                        'django-%s.log' % pwd.getpwuid(os.geteuid()).pw_name)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -47,7 +50,7 @@ LOGGING = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': os.path.join(BASE_DIR, 'prodekanus/django.log'),
+            'filename': _logfile,
             'formatter': 'simple',
         },
         'mail_admins': {
