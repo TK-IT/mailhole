@@ -52,6 +52,7 @@ LOGGING = {
             'class': 'logging.handlers.WatchedFileHandler',
             'filename': _logfile,
             'formatter': 'simple',
+            'encoding': 'utf-8',
         },
         'mail_admins': {
             'level': 'ERROR',
