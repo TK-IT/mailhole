@@ -214,12 +214,13 @@ class Submit(FormView):
     def form_valid(self, form):
         try:
             # form.save() logs the action
-            message = form.save()
+            messages = form.save()
         except ValidationError as exn:
             # form_invalid logs the error
             form.add_error(None, exn)
             return self.form_invalid(form)
-        message.filter_incoming()
+        for message in messages:
+            message.filter_incoming()
         return HttpResponse('250 OK')
 
 

@@ -22,6 +22,25 @@ class AuthenticationForm(auth_forms.AuthenticationForm):
                 'Kontakt %s' % settings.MANAGER_NAME)
 
 
+def split_by_domain(rcpt_tos):
+    '''
+    Given a list of email addresses, return list of lists,
+    each list containing email addresses for a single domain.
+
+    >>> split_by_domain(['a@foo', 'b@foo', 'c@bar'])
+    [['c@bar'], ['a@foo', 'b@foo']]
+    '''
+    by_domain = {}
+    for r in rcpt_tos:
+        try:
+            local, domain = r.split('@')
+        except ValueError:
+            raise ValueError(r)
+        by_domain.setdefault(domain.lower(), []).append(r)
+    # List of lists
+    return [by_domain[k] for k in sorted(by_domain)]
+
+
 class SubmitForm(forms.Form):
     key = forms.CharField()
     mail_from = forms.CharField()
@@ -60,16 +79,20 @@ class SubmitForm(forms.Form):
         message_bytes = self.cleaned_data['message_bytes'].read()
         self.cleaned_data['orig_message_bytes'].open('rb')
         orig_message_bytes = self.cleaned_data['orig_message_bytes'].read()
-        message = Message.create(
-            peer=self.cleaned_data['peer'],
-            mail_from=self.cleaned_data['mail_from'],
-            rcpt_tos=self.cleaned_data['rcpt_tos'],
-            message_bytes=message_bytes,
-            orig_mail_from=self.cleaned_data['orig_mail_from'],
-            orig_rcpt_tos=self.cleaned_data['orig_rcpt_tos'],
-            orig_message_bytes=orig_message_bytes,
-        )
-        return message
+        split_orig_rcpt_tos = split_by_domain(
+            self.cleaned_data['orig_rcpt_tos'])
+        messages = []
+        for orig_rcpt_tos in split_orig_rcpt_tos:
+            messages.append(Message.create(
+                peer=self.cleaned_data['peer'],
+                mail_from=self.cleaned_data['mail_from'],
+                rcpt_tos=self.cleaned_data['rcpt_tos'],
+                message_bytes=message_bytes,
+                orig_mail_from=self.cleaned_data['orig_mail_from'],
+                orig_rcpt_tos=orig_rcpt_tos,
+                orig_message_bytes=orig_message_bytes,
+            ))
+        return messages
 
 
 class MessageListForm(forms.Form):
