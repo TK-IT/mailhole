@@ -1,2 +1,4 @@
 Django==1.11.3
 dj_database_url
+django-macros
+html2text
