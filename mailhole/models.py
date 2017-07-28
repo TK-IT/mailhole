@@ -421,6 +421,12 @@ class Message(models.Model):
         return html.format_html_join(
             ', ', '<span title="{}">{}</span>', self.to_people())
 
+    def unsubscribe_links(self):
+        header = str(decode_any_header(
+            self.parsed_headers.get('List-Unsubscribe') or ''))
+        hrefs = [h.strip().strip('<>') for h in header.split(',')]
+        return html.format_html_join(', ', '<a href="{0}">{0}</a>', zip(hrefs))
+
     def subject(self):
         return str(decode_any_header(self.parsed_headers.get('Subject') or ''))
 

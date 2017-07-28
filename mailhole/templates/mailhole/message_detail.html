@@ -13,6 +13,7 @@
 <p><i>Fra:</i> {{ message.from_ }}</p>
 <p><i>Til:</i> {{ message.to_as_html }} &rarr; {{ message.rcpt_tos }}</p>
 <div style="white-space: pre-wrap">{{ message.body_text }}</div>
+<p>{{ message.unsubscribe_links }}</p>
 <p>{{ form.recipient }} <input type="submit" name="send" value="Videresend" /></p>
 <p><input type="submit" name="trash" value="Slet" /></p>
 <p><input type="submit" name="spam" value="Markér som spam" /></p>
