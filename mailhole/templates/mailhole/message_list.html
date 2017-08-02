@@ -40,6 +40,7 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
 <th>Fra</th>
 <th>Til</th>
 <th>Emne</th>
+<th>Modtaget</th>
 </tr>
 </thead>
 <tbody>
@@ -55,6 +56,7 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
     <td>{% if all %}{{ message.mailbox }}
         {% else %}{{ message.to_as_html }}{% endif %}</td>
     <td><a href="{{ message.get_absolute_url }}">{{ message.subject|default:BLANK_SUBJECT }}</a></td>
+    <td>{{ message.created_time }}</td>
 </tr>
 {% endfor %}
 </tbody>

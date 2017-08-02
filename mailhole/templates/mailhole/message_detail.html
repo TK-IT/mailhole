@@ -12,6 +12,17 @@
 {{ form.errors }}
 <p><i>Fra:</i> {{ message.from_ }}</p>
 <p><i>Til:</i> {{ message.to_as_html }} &rarr; {{ message.rcpt_tos }}</p>
+<p><i>Sendt:</i> {{ message.parsed_headers.date }}</p>
+<p><i>Modtaget:</i> {{ message.created_time }}</p>
+{% if message.status_on %}
+<p><i>Håndteret:</i> {{ message.status_on }} markeret {{ message.get_status_display }}</p>
+{% endif %}
+{% if message.status_by %}
+<p><i>Håndteret af</i> {{ message.status_by }}</p>
+{% endif %}
+{% if message.filtered_by %}
+<p><i>Håndteret af filter</i> {{ message.filtered_by }}</p>
+{% endif %}
 <div style="white-space: pre-wrap">{{ message.body_text }}</div>
 <p>{{ message.unsubscribe_links }}</p>
 <p>{{ form.recipient }} <input type="submit" name="send" value="Videresend" /></p>
