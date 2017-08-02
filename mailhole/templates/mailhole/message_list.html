@@ -7,7 +7,12 @@
 {% block navcurrent %}<span>{{ status }}</span>{% endblock %}
 {% block head %}
 <style>
-.subject { white-space: nowrap; overflow: hidden; text-ellipsis: ellipsis; }
+.subject > a {
+    display: inline-block;
+    max-width: 300px;
+    overflow: hidden;
+    text-ellipsis: ellipsis;
+}
 .received-time { white-space: nowrap; }
 </style>
 {% endblock %}
