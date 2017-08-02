@@ -5,6 +5,11 @@
 {% else %}<a href="{{ mailbox.get_absolute_url }}">{{ mailbox }}</a>
 {% endif %}{% endblock %}
 {% block navcurrent %}<span>{{ status }}</span>{% endblock %}
+{% block head %}
+<style>
+.subject { white-space: nowrap; overflow: hidden; text-ellipsis: ellipsis; }
+.received-time { white-space: nowrap; }
+{% endblock %}
 {% block content %}
 {% if all %}
 <h1>{{ status }}</h1>
@@ -47,16 +52,16 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
 {% for message in object_list %}
 <tr>
     {% if inbox %}
-    <td>{{ message.form.spam }}</td>
-    <td>{{ message.form.forward }}</td>
-    <td>{{ message.form.whitelist }}</td>
-    <td>{{ message.form.trash }}</td>
+    <td class="spam">{{ message.form.spam }}</td>
+    <td class="forward">{{ message.form.forward }}</td>
+    <td class="whitelist">{{ message.form.whitelist }}</td>
+    <td class="trash">{{ message.form.trash }}</td>
     {% endif %}
-    <td>{{ message.from_ }}</td>
-    <td>{% if all %}{{ message.mailbox }}
+    <td class="from">{{ message.from_ }}</td>
+    <td class="to">{% if all %}{{ message.mailbox }}
         {% else %}{{ message.to_as_html }}{% endif %}</td>
-    <td><a href="{{ message.get_absolute_url }}">{{ message.subject|default:BLANK_SUBJECT }}</a></td>
-    <td>{{ message.created_time }}</td>
+    <td class="subject"><a href="{{ message.get_absolute_url }}">{{ message.subject|default:BLANK_SUBJECT }}</a></td>
+    <td class="received-time">{{ message.created_time }}</td>
 </tr>
 {% endfor %}
 </tbody>
