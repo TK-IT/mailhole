@@ -39,6 +39,19 @@ Hvis du er i tvivl, så læs mailen inden du videresender den.
 </p>
 {% endif %}
 
+<p>
+Viser email
+{{ page.start_index }}-{{ page.end_index }}/{{ paginator.count }}.
+Side:
+{% for p in paginator.page_range %}
+{% if p == page.number %}
+<b>{{ p }}</b>
+{% else %}
+<a href="?p={{ p }}">{{ p }}</a>
+{% endif %}
+{% endfor %}
+</p>
+
 <form method="post">{% csrf_token %}
 {{ form.errors }}
 <table>

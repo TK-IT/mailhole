@@ -2,6 +2,7 @@ import logging
 
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, InvalidPage
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.http import (
@@ -94,9 +95,26 @@ class MessageListBase(FormView):
     def get_queryset(self):
         raise NotImplementedError
 
+    def get_paginator(self):
+        try:
+            return self._paginator
+        except AttributeError:
+            qs = self.get_queryset()
+            qs = qs.order_by('-created_time')
+            self._paginator = Paginator(qs, 100)
+            return self._paginator
+
+    def get_page(self):
+        paginator = self.get_paginator()
+        page = self.request.GET.get('p')
+        try:
+            return paginator.page(page)
+        except InvalidPage:
+            return paginator.page(1)
+
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs(**kwargs)
-        kwargs['queryset'] = self.get_queryset()
+        kwargs['queryset'] = self.get_page()
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -105,6 +123,8 @@ class MessageListBase(FormView):
         context_data['status'] = Message.status_display(self.kwargs['status'])
         context_data['inbox'] = self.kwargs['status'] == Message.INBOX
         context_data['object_list'] = form.messages
+        context_data['page'] = self.get_page()
+        context_data['paginator'] = self.get_paginator()
         return context_data
 
     def form_valid(self, form):
