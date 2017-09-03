@@ -87,59 +87,51 @@ class MailboxDetail(SingleMailboxRequiredMixin, TemplateView):
         return context_data
 
 
-class MessageList(MailboxRequiredMixin, FormView):
+class MessageListBase(FormView):
     template_name = 'mailhole/message_list.html'
     form_class = MessageListForm
 
+    def get_queryset(self):
+        raise NotImplementedError
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super().get_form_kwargs(**kwargs)
+        kwargs['queryset'] = self.get_queryset()
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context_data = super().get_context_data(**kwargs)
+        form = context_data['form']
+        context_data['status'] = Message.status_display(self.kwargs['status'])
+        context_data['inbox'] = self.kwargs['status'] == Message.INBOX
+        context_data['object_list'] = form.messages
+        return context_data
+
+    def form_valid(self, form):
+        # form.save logs the action(s)
+        form.save(self.request.user)
+        return redirect(self.request.path)
+
+
+class MessageList(MailboxRequiredMixin, MessageListBase):
     def get_queryset(self):
         return Message.objects.filter(status=self.kwargs['status'],
                                       mailbox__in=self.mailboxes)
 
-    def get_form_kwargs(self, **kwargs):
-        kwargs = super().get_form_kwargs(**kwargs)
-        kwargs['queryset'] = self.get_queryset()
-        return kwargs
-
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        form = context_data['form']
         context_data['all'] = True
-        context_data['status'] = Message.status_display(self.kwargs['status'])
-        context_data['inbox'] = self.kwargs['status'] == Message.INBOX
-        context_data['object_list'] = form.messages
         return context_data
 
-    def form_valid(self, form):
-        # form.save logs the action(s)
-        form.save(self.request.user)
-        return redirect(self.request.path)
 
-
-class MailboxMessageList(SingleMailboxRequiredMixin, FormView):
-    template_name = 'mailhole/message_list.html'
-    form_class = MessageListForm
-
+class MailboxMessageList(SingleMailboxRequiredMixin, MessageListBase):
     def get_queryset(self):
         return self.mailbox.message_set.filter(status=self.kwargs['status'])
 
-    def get_form_kwargs(self, **kwargs):
-        kwargs = super().get_form_kwargs(**kwargs)
-        kwargs['queryset'] = self.get_queryset()
-        return kwargs
-
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
-        form = context_data['form']
         context_data['mailbox'] = self.mailbox
-        context_data['status'] = Message.status_display(self.kwargs['status'])
-        context_data['inbox'] = self.kwargs['status'] == Message.INBOX
-        context_data['object_list'] = form.messages
         return context_data
-
-    def form_valid(self, form):
-        # form.save logs the action(s)
-        form.save(self.request.user)
-        return redirect(self.request.path)
 
 
 class MessageDetail(SingleMailboxRequiredMixin, FormView):
