@@ -362,10 +362,8 @@ class Message(models.Model):
                 header_end = len(message_bytes)
             else:
                 raise ValidationError('Message must contain CR LF CR LF')
-        try:
-            self.headers = message_bytes[:header_end].decode('ascii')
-        except UnicodeDecodeError:
-            raise ValidationError('Message headers must be ASCII')
+        self.headers = message_bytes[:header_end].decode(
+            'ascii', errors='replace')
         try:
             message = email.message_from_bytes(message_bytes, DjangoMessage)
         except Exception:
