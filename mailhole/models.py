@@ -186,7 +186,7 @@ class FilterRule(models.Model):
         '''
         sender = message.orig_mail_from
         headers = message.parsed_headers
-        subject = headers.get('Subject') or ''
+        subject = decode_any_header(headers.get('Subject') or '')
         header_strs = ['%s: %s' % (k, decode_any_header(v))
                        for k, v in headers.items()]
         for filter in filters:
