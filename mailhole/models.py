@@ -14,6 +14,7 @@ from django.core.files.base import ContentFile
 from django.utils import html, timezone
 
 from mailhole.utils import html_to_plain, decode_any_header
+import mailhole.policy
 import email.utils
 
 
@@ -525,6 +526,10 @@ class SentMessage(models.Model):
 
     @classmethod
     def create_and_send(cls, message, user, recipient=None):
+        try:
+            mailhole.policy.rewrite_message(message)
+        except Exception:
+            logger.exception("Could not apply policy")
         if recipient is None:
             recipients = message.recipients()
         else:
