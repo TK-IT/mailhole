@@ -476,10 +476,12 @@ class Message(models.Model):
             created_time__lt=self.created_time,
             status=Message.TRASH,
         )
-        # Filter on orig_rcpt_tos since we split up multi-domain messages
-        # in SubmitForm.save() using mailhole.forms.split_by_domain.
+        # Filter on rcpt_tos since we split up multi-domain messages
+        # in SubmitForm.save() using mailhole.forms.split_by_domain,
+        # and because tkmail sends multiple messages through mailhole
+        # when an email is sent to multiple groups.
         qs = qs.filter(
-            orig_rcpt_tos=self.orig_rcpt_tos,
+            rcpt_tos=self.rcpt_tos,
         )
         return qs.exists()
 
