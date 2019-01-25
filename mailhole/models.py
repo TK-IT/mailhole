@@ -273,6 +273,8 @@ class Message(models.Model):
     orig_message_file = models.FileField(upload_to=orig_message_upload_to,
                                          blank=False, null=True)
     headers = models.TextField()
+    # Unfortunately, MySQL makes it difficult to index more than 190 bytes :-(
+    message_id = models.CharField(max_length=190, db_index=True, blank=True, null=True)
     body_text_bytes = models.BinaryField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS,
@@ -310,8 +312,8 @@ class Message(models.Model):
         message.extract_message_data()
         message.clean()
         message.save()
-        logger.info("message:%s peer:%s Subject: %r From: %s To: %s",
-                    message.pk, peer.slug, str(message.subject()),
+        logger.info("message:%s msgid:%s peer:%s Subject: %r From: %s To: %s",
+                    message.pk, message.message_id, peer.slug, str(message.subject()),
                     message.from_address(), message.orig_rcpt_tos)
         return message
 
@@ -371,9 +373,13 @@ class Message(models.Model):
             raise ValidationError('Could not parse message')
         self.body_text = Message._get_body_text(self, message)
         self.orig_message_file.close()
+        self.extract_header_fields()
 
     def extract_message_data(self):
         self._extract_message_data(self)
+
+    def extract_header_fields(self):
+        self.message_id = self.parsed_headers.get("Message-ID")
 
     @property
     def body_text(self):
@@ -462,6 +468,21 @@ class Message(models.Model):
         self.filtered_by = filter
         self.status_on = timezone.now()
 
+    def exists_earlier_identical_forwarded_message(self):
+        if self.message_id is None:
+            return False
+        qs = Message.objects.filter(
+            message_id=self.message_id,
+            created_time__lt=self.created_time,
+            status=Message.TRASH,
+        )
+        # Filter on orig_rcpt_tos since we split up multi-domain messages
+        # in SubmitForm.save() using mailhole.forms.split_by_domain.
+        qs = qs.filter(
+            orig_rcpt_tos=self.orig_rcpt_tos,
+        )
+        return qs.exists()
+
     def filter_incoming(self):
         '''
         Apply any applicable FilterRules to message.
@@ -472,6 +493,10 @@ class Message(models.Model):
         filter = FilterRule.filter_message(filters, self)
         if filter is None:
             if self.mailbox.default_action == Mailbox.FORWARD:
+                if self.exists_earlier_identical_forwarded_message():
+                    logger.info('message:%s has already been forwarded before => don\'t forward (mailbox)',
+                                self.pk)
+                    return
                 logger.info('message:%s from peer:%s:%s => forward (mailbox)',
                             self.pk, self.peer_id, self.peer.slug)
                 self.set_status(Message.TRASH, filter=filter)
@@ -485,6 +510,10 @@ class Message(models.Model):
             self.set_status(Message.SPAM, filter=filter)
             self.save()
         elif filter.action == FilterRule.FORWARD:
+            if self.exists_earlier_identical_forwarded_message():
+                logger.info('message:%s has already been forwarded before => don\'t forward (filter)',
+                            self.pk)
+                return
             self.set_status(Message.TRASH, filter=filter)
             self.save()
             SentMessage.create_and_send(self, user=None)
