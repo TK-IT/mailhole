@@ -379,7 +379,13 @@ class Message(models.Model):
         self._extract_message_data(self)
 
     def extract_header_fields(self):
-        self.message_id = self.parsed_headers.get("Message-ID")
+        message_id = self.parsed_headers.get("Message-ID")
+        if message_id and len(message_id) > 190:
+            # This can easily happen since Message-ID may be longer.
+            # Unfortunately we're limited to 190 characters due to
+            # silly behavior in MySQL.
+            message_id = message_id[:190]
+        self.message_id = message_id
 
     @property
     def body_text(self):
