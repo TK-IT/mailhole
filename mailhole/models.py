@@ -380,6 +380,8 @@ class Message(models.Model):
 
     def extract_header_fields(self):
         message_id = self.parsed_headers.get("Message-ID")
+        if message_id:
+            message_id = message_id.strip()
         if message_id and len(message_id) > 190:
             # This can easily happen since Message-ID may be longer.
             # Unfortunately we're limited to 190 characters due to
