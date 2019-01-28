@@ -12,13 +12,14 @@ from mailhole.models import Message
 
 
 def main():
-    qs = Message.objects.filter(message_id=None).order_by("created_time")
+    qs = Message.objects.order_by("created_time")
     total = len(qs)
     saved = 0
     dupes = 0
     for i, message in enumerate(qs):
+        prev = message.message_id
         message.extract_header_fields()
-        if message.message_id:
+        if message.message_id != prev:
             saved += 1
             message.save()
             if message.exists_earlier_identical_forwarded_message():
