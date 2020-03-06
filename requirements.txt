@@ -1,4 +1,4 @@
-Django==1.11.3
+Django==1.11.29
 dj_database_url
 django-macros
 html2text
