@@ -5,6 +5,7 @@ import logging
 import django.core.mail
 from django.core.mail import EmailMessage
 from django.core.mail.message import MIMEMixin
+from django.conf import settings
 from django.db import models
 from django.db.models import Max
 from django.contrib.auth.models import User
@@ -502,6 +503,8 @@ class Message(models.Model):
         filters = filters.order_by('order')
         filter = FilterRule.filter_message(filters, self)
         if filter is None:
+            if settings.NO_OUTGOING_EMAIL:
+                return
             if self.mailbox.default_action == Mailbox.FORWARD:
                 if self.exists_earlier_identical_forwarded_message():
                     logger.info('message:%s has already been forwarded before => don\'t forward (mailbox)',
@@ -520,6 +523,8 @@ class Message(models.Model):
             self.set_status(Message.SPAM, filter=filter)
             self.save()
         elif filter.action == FilterRule.FORWARD:
+            if settings.NO_OUTGOING_EMAIL:
+                return
             if self.exists_earlier_identical_forwarded_message():
                 logger.info('message:%s has already been forwarded before => don\'t forward (filter)',
                             self.pk)

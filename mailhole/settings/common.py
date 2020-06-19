@@ -163,3 +163,5 @@ LOGGING = {
         },
     },
 }
+
+NO_OUTGOING_EMAIL = False

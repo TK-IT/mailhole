@@ -176,6 +176,9 @@ class MessageDetail(SingleMailboxRequiredMixin, FormView):
         fresh_form = MessageDetailForm()
         message = self.get_object()
         if form.cleaned_data['send']:
+            if settings.NO_OUTGOING_EMAIL and not user.is_superuser:
+                form.add_error(None, "NO_OUTGOING_EMAIL er i brug")
+                return self.render_to_response(self.get_context_data(form=form))
             # SentMessage.create_and_send logs the action
             recipient = form.cleaned_data['recipient']
             SentMessage.create_and_send(message=message,

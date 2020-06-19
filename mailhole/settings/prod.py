@@ -70,3 +70,5 @@ LOGGING = {
         },
     },
 }
+
+NO_OUTGOING_EMAIL = True

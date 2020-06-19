@@ -49,8 +49,13 @@ def make_monitor_message(to, messages):
 
 
 def main(dry_run):
+    from django.conf import settings
     from django.contrib.auth.models import User
     from mailhole.models import Message, Mailbox, MonitorMessage
+
+    if settings.NO_OUTGOING_EMAIL and not dry_run:
+        print("NO_OUTGOING_EMAIL is set - don't send anything")
+        return
 
     inbox_by_mailbox_id = {}
     for message in Message.objects.filter(status=Message.INBOX):

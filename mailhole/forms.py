@@ -130,6 +130,10 @@ class MessageListForm(forms.Form):
                 raise forms.ValidationError(
                     'Du må ikke markere mere end én boks ved en mail ' +
                     '(%s %s %s)' % (pk, by_pk[pk], mode))
+            if settings.NO_OUTGOING_EMAIL and mode == "forward":
+                raise forms.ValidationError(
+                    "NO_OUTGOING_EMAIL er i brug"
+                )
 
     def save(self, user):
         for message in self.messages:
