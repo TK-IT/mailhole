@@ -329,6 +329,15 @@ class Message(models.Model):
             return self._parsed_headers
 
     @property
+    def parsed_outgoing_headers(self):
+        try:
+            return self._parsed_outgoing_headers
+        except AttributeError:
+            self._parsed_outgoing_headers = (
+                email.message_from_string(self.outgoing_headers, DjangoMessage))
+            return self._parsed_outgoing_headers
+
+    @property
     def orig_message(self):
         try:
             return self._orig_message
@@ -433,6 +442,13 @@ class Message(models.Model):
         parsed = email.utils.getaddresses(self.parsed_headers.get_all('From'))
         return ','.join(address for realname, address in parsed)
 
+    def outgoing_from(self):
+        return str(decode_any_header(self.parsed_outgoing_headers.get('From') or ''))
+
+    def outgoing_from_address(self):
+        parsed = email.utils.getaddresses(self.parsed_outgoing_headers.get_all('From'))
+        return ','.join(address for realname, address in parsed)
+
     def to_people(self):
         keys = ('To', 'Cc')
         values = [v for k in keys
@@ -523,7 +539,7 @@ class Message(models.Model):
         filters = filters.order_by('order')
         filter = FilterRule.filter_message(filters, self)
         if filter is None:
-            if settings.NO_OUTGOING_EMAIL:
+            if not mailhole.policy.allow_automatic_forward(self):
                 return
             if self.mailbox.default_action == Mailbox.FORWARD:
                 if self.exists_earlier_identical_forwarded_message():
@@ -543,7 +559,7 @@ class Message(models.Model):
             self.set_status(Message.SPAM, filter=filter)
             self.save()
         elif filter.action == FilterRule.FORWARD:
-            if settings.NO_OUTGOING_EMAIL:
+            if not mailhole.policy.allow_automatic_forward(self):
                 return
             if self.exists_earlier_identical_forwarded_message():
                 logger.info('message:%s has already been forwarded before => don\'t forward (filter)',

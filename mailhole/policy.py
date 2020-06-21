@@ -1,5 +1,7 @@
 import logging
 
+from django.conf import settings
+
 
 logger = logging.getLogger("mailhole")
 
@@ -23,3 +25,12 @@ def rewrite_message(message):
             "Policy rewrite: From: %r -> %r", message.message["From"], from_address
         )
         message.message.replace_header("From", from_address)
+
+
+def allow_automatic_forward(message):
+    if not settings.NO_OUTGOING_EMAIL:
+        return True
+    outgoing_from_address = message.outgoing_from_address()
+    if "," in outgoing_from_address:
+        return False
+    return outgoing_from_address.lower().endswith("@%s" % message.mailbox.name.lower())

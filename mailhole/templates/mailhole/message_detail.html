@@ -10,7 +10,8 @@
 <h1>{{ message.subject|default:BLANK_SUBJECT }}</h1>
 <form method="post">{% csrf_token %}
 {{ form.errors }}
-<p><i>Fra:</i> {{ message.from_ }}</p>
+<p><i>Oprindelig fra:</i> {{ message.from_ }}</p>
+<p><i>Fra:</i> {{ message.outgoing_from }}</p>
 <p><i>Til:</i> {{ message.to_as_html }} &rarr; {{ message.rcpt_tos }}</p>
 <p><i>Sendt:</i> {{ message.parsed_headers.date }}</p>
 <p><i>Modtaget:</i> {{ message.created_time }}</p>
