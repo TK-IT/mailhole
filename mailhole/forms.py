@@ -98,6 +98,7 @@ class SubmitForm(forms.Form):
 class MessageListForm(forms.Form):
     def __init__(self, **kwargs):
         self.messages = list(kwargs.pop('queryset'))
+        self.no_outgoing_emails = kwargs.pop("no_outgoing_emails", False)
         super().__init__(**kwargs)
 
         for message in self.messages:
@@ -130,7 +131,7 @@ class MessageListForm(forms.Form):
                 raise forms.ValidationError(
                     'Du må ikke markere mere end én boks ved en mail ' +
                     '(%s %s %s)' % (pk, by_pk[pk], mode))
-            if settings.NO_OUTGOING_EMAIL and mode == "forward":
+            if self.no_outgoing_emails and mode == "forward":
                 raise forms.ValidationError(
                     "NO_OUTGOING_EMAIL er i brug"
                 )

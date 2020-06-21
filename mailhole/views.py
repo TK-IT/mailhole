@@ -115,6 +115,7 @@ class MessageListBase(FormView):
     def get_form_kwargs(self, **kwargs):
         kwargs = super().get_form_kwargs(**kwargs)
         kwargs['queryset'] = self.get_page()
+        kwargs["no_outgoing_emails"] = settings.NO_OUTGOING_EMAIL and not self.request.user.is_superuser
         return kwargs
 
     def get_context_data(self, **kwargs):
