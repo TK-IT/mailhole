@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='message',
             name='headers',
-            field=models.TextField(),
+            field=models.TextField(help_text='From orig_message_file'),
         ),
         migrations.AlterField(
             model_name='message',

@@ -273,7 +273,8 @@ class Message(models.Model):
     message_file = models.FileField(upload_to=message_upload_to)
     orig_message_file = models.FileField(upload_to=orig_message_upload_to,
                                          blank=False, null=True)
-    headers = models.TextField()
+    headers = models.TextField(help_text="From orig_message_file")
+    outgoing_headers = models.TextField(help_text="From message_file")
     # Unfortunately, MySQL makes it difficult to index more than 190 bytes :-(
     message_id = models.CharField(max_length=190, db_index=True, blank=True, null=True)
     body_text_bytes = models.BinaryField(null=True)
@@ -375,6 +376,25 @@ class Message(models.Model):
         self.body_text = Message._get_body_text(self, message)
         self.orig_message_file.close()
         self.extract_header_fields()
+        self._extract_outgoing_headers(self)
+
+    @staticmethod
+    def _extract_outgoing_headers(self):
+        '''
+        Set self.outgoing_headers from self.message_file.
+        '''
+        self.message_file.open('rb')
+        message_bytes = self.message_file.read()
+        try:
+            header_end = message_bytes.index(b'\r\n\r\n') + 4
+        except ValueError:
+            if message_bytes.endswith(b'\r\n'):
+                header_end = len(message_bytes)
+            else:
+                raise ValidationError('Message must contain CR LF CR LF')
+        self.outgoing_headers = message_bytes[:header_end].decode(
+            'ascii', errors='replace')
+        self.message_file.close()
 
     def extract_message_data(self):
         self._extract_message_data(self)
