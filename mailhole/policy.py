@@ -28,7 +28,9 @@ def rewrite_message(message):
 
 
 def allow_automatic_forward(message):
-    if not settings.NO_OUTGOING_EMAIL:
+    if settings.NO_OUTGOING_EMAIL:
+        return False
+    if not settings.REQUIRE_FROM_REWRITING:
         return True
     outgoing_from_address = message.outgoing_from_address()
     if "," in outgoing_from_address:
