@@ -449,6 +449,9 @@ class Message(models.Model):
         parsed = email.utils.getaddresses(self.parsed_outgoing_headers.get_all('From'))
         return ','.join(address for realname, address in parsed)
 
+    def outgoing_content_type(self):
+        return self.parsed_outgoing_headers.get_content_type()
+
     def to_people(self):
         keys = ('To', 'Cc')
         values = [v for k in keys

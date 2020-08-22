@@ -30,9 +30,14 @@ def rewrite_message(message):
 def allow_automatic_forward(message):
     if settings.NO_OUTGOING_EMAIL:
         return False
-    if not settings.REQUIRE_FROM_REWRITING:
-        return True
-    outgoing_from_address = message.outgoing_from_address()
-    if "," in outgoing_from_address:
-        return False
-    return outgoing_from_address.lower().endswith("@%s" % message.mailbox.name.lower())
+    if settings.REQUIRE_PLAIN_TEXT:
+        if message.outgoing_content_type() != "text/plain":
+            return False
+    if settings.REQUIRE_FROM_REWRITING:
+        outgoing_from_address = message.outgoing_from_address()
+        if "," in outgoing_from_address:
+            return False
+        expected_domain = "@%s" % message.mailbox.name.lower()
+        if not outgoing_from_address.lower().endswith(expected_domain):
+            return False
+    return True
