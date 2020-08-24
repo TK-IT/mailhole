@@ -579,10 +579,10 @@ class Message(models.Model):
 
 
 class UnsafeEmailMessage(EmailMessage):
-    def __init__(self, message, recipient):
+    def __init__(self, message, recipient, **kwargs):
         if not isinstance(message, email.message.Message):
             raise TypeError(type(message))
-        super().__init__()
+        super().__init__(**kwargs)
         self._recipient = recipient
         self._message = message
 
@@ -626,7 +626,8 @@ class SentMessage(models.Model):
                                        created_by=user)
             sent_message.clean()
             email_backend = django.core.mail.get_connection()
-            email_message = UnsafeEmailMessage(message.message, r)
+            from_email = mailhole.policy.override_outgoing_mail_from(message.mail_from)
+            email_message = UnsafeEmailMessage(message.message, r, from_email=from_email)
             email_backend.send_messages([email_message])
             sent_message.save()
 

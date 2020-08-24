@@ -41,3 +41,8 @@ def allow_automatic_forward(message):
         if not outgoing_from_address.lower().endswith(expected_domain):
             return False
     return True
+
+
+def override_outgoing_mail_from(mail_from: str) -> str:
+    # E.g. settings.SERVER_EMAIL
+    return mail_from
