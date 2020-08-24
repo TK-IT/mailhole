@@ -30,6 +30,8 @@ def rewrite_message(message):
 def allow_automatic_forward(message):
     if settings.NO_OUTGOING_EMAIL:
         return False
+    if message.mail_from.upper() == "ADMIN@TAAGEKAMMERET.DK":
+        return False
     if settings.REQUIRE_PLAIN_TEXT:
         if message.outgoing_content_type() != "text/plain":
             return False
