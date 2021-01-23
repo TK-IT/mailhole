@@ -545,14 +545,14 @@ class Message(models.Model):
             if not mailhole.policy.allow_automatic_forward(self):
                 return
             if self.mailbox.default_action == Mailbox.FORWARD:
-                if self.exists_earlier_identical_forwarded_message():
-                    logger.info('message:%s has already been forwarded before => don\'t forward (mailbox)',
-                                self.pk)
-                    return
                 logger.info('message:%s from peer:%s:%s => forward (mailbox)',
                             self.pk, self.peer_id, self.peer.slug)
                 self.set_status(Message.TRASH, filter=filter)
                 self.save()
+                if self.exists_earlier_identical_forwarded_message():
+                    logger.info('message:%s has already been forwarded before => don\'t forward (mailbox)',
+                                self.pk)
+                    return
                 SentMessage.create_and_send(self, user=None)
             return
         logger.info('message:%s from peer:%s:%s matches filter:%s => %s',
@@ -564,12 +564,12 @@ class Message(models.Model):
         elif filter.action == FilterRule.FORWARD:
             if not mailhole.policy.allow_automatic_forward(self):
                 return
+            self.set_status(Message.TRASH, filter=filter)
+            self.save()
             if self.exists_earlier_identical_forwarded_message():
                 logger.info('message:%s has already been forwarded before => don\'t forward (filter)',
                             self.pk)
                 return
-            self.set_status(Message.TRASH, filter=filter)
-            self.save()
             SentMessage.create_and_send(self, user=None)
         else:
             raise Exception(filter.action)
