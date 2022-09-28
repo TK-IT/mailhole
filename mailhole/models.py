@@ -323,9 +323,8 @@ class Message(models.Model):
         message.extract_message_data()
         message.clean()
         message.save()
-        logger.info("message:%s msgid:%s peer:%s Subject: %r From: %s To: %s",
-                    message.pk, message.message_id, peer.slug, str(message.subject()),
-                    message.from_address(), message.orig_rcpt_tos)
+        logger.info("message:%s msgid:%s peer:%s To: %s",
+                    message.pk, message.message_id, peer.slug, message.orig_rcpt_tos)
         return message
 
     @property
