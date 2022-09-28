@@ -33,12 +33,21 @@ class Mailbox(models.Model):
         (HOLD, 'Tilbagehold'),
         (FORWARD, 'Videresend'),
     ]
+    KEEP = "keep"
+    DELETE = "delete"
+    DATA_RETENTION = [
+        (KEEP, "Behold"),
+        (DELETE, "Slet"),
+    ]
 
     name = models.CharField(max_length=100, null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     readers = models.ManyToManyField(User)
     default_action = models.CharField(max_length=10, choices=ACTION,
                                       default=HOLD)
+    data_retention = models.CharField(
+        max_length=10, choices=DATA_RETENTION, null=True
+    )
 
     def __str__(self):
         return self.name
