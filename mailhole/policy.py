@@ -48,3 +48,31 @@ def allow_automatic_forward(message):
 def override_outgoing_mail_from(mail_from: str) -> str:
     # E.g. settings.SERVER_EMAIL
     return mail_from
+
+
+def data_retention_after_send(message) -> None:
+    from mailhole import models
+
+    if message.status != models.Message.TRASH:
+        return
+    if message.mailbox.data_retention != models.Message.DELETE:
+        return
+    try:
+        message.message_file.delete()
+    except Exception:
+        logger.exception("Could not delete message_file")
+    try:
+        message.orig_message_file.delete()
+    except Exception:
+        logger.exception("Could not delete orig_message_file")
+    message.mail_from = "<mailhole_scrubbed>"
+    message.rcpt_tos = "<mailhole_scrubbed>"
+    message.orig_mail_from = "<mailhole_scrubbed>"
+    # We don't scrub orig_rcpt_tos
+    # message.orig_rcpt_tos = "<mailhole_scrubbed>"
+    message.headers = ""
+    message.outgoing_headers = ""
+    # We don't scrub message_id
+    # message.message_id = ""
+    message.body_text_bytes = None
+    message.save()

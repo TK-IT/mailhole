@@ -639,6 +639,7 @@ class SentMessage(models.Model):
             email_message = UnsafeEmailMessage(message.message, r, from_email=from_email)
             email_backend.send_messages([email_message])
             sent_message.save()
+        mailhole.policy.data_retention_after_send(message)
 
 
 class MonitorMessage(models.Model):
