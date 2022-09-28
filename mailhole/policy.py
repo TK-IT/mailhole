@@ -55,7 +55,7 @@ def data_retention_after_send(message) -> None:
 
     if message.status != models.Message.TRASH:
         return
-    if message.mailbox.data_retention != models.Message.DELETE:
+    if message.mailbox.data_retention != models.Mailbox.DELETE:
         return
     try:
         message.message_file.delete()
