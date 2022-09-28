@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+import json
 import os
 import sys
 
 if __name__ == "__main__":
+    if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+        with open('env.json') as fp:
+            os.environ.update(json.load(fp))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mailhole.settings")
     try:
         with open(os.path.dirname(__file__) + '/../automysql.py') as fp:
