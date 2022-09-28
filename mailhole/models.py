@@ -438,6 +438,8 @@ class Message(models.Model):
         self.body_text_bytes = None if value is None else value.encode('utf8')
 
     def from_(self):
+        if self.headers == "":
+            return "(anonymiseret)"
         return str(decode_any_header(self.parsed_headers.get('From') or ''))
 
     def from_address(self):
@@ -452,6 +454,8 @@ class Message(models.Model):
         return ','.join(address for realname, address in parsed)
 
     def outgoing_from(self):
+        if self.outgoing_headers == "":
+            return "(anonymiseret)"
         return str(decode_any_header(self.parsed_outgoing_headers.get('From') or ''))
 
     def outgoing_from_address(self):
@@ -480,6 +484,8 @@ class Message(models.Model):
                          for formatted, abbreviated in self.to_people())
 
     def to_as_html(self):
+        if self.headers == "":
+            return html.escape(self.orig_rcpt_tos)
         return html.format_html_join(
             ', ', '<span title="{}">{}</span>', self.to_people())
 

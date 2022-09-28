@@ -28,8 +28,10 @@
 <p><i>Håndteret af filter</i> {{ message.filtered_by }}</p>
 {% endif %}
 <div style="white-space: pre-wrap">{{ message.body_text }}</div>
+{% if message.headers %}
 <p>{{ form.recipient }} <input type="submit" name="send" value="Videresend" /></p>
 <p><input type="submit" name="trash" value="Slet" /></p>
 <p><input type="submit" name="spam" value="Markér som spam" /></p>
+{% endif %}
 </form>
 {% endblock %}
