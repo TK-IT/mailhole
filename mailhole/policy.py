@@ -53,7 +53,7 @@ def override_outgoing_mail_from(mail_from: str) -> str:
 def data_retention_after_send(message) -> None:
     from mailhole import models
 
-    if message.status != models.Message.TRASH:
+    if message.status not in (models.Message.TRASH, models.Message.SPAM):
         return
     if message.mailbox.data_retention != models.Mailbox.DELETE:
         return
