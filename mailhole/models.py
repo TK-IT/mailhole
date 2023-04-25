@@ -471,8 +471,9 @@ class Message(models.Model):
         parsed = email.utils.getaddresses(values)
         for realname, address in parsed:
             realname = str(decode_any_header(realname))
-            if realname:
-                abbreviated = realname.split()[0]
+            realname_split = realname.split()
+            if realname_split:
+                abbreviated = realname_split[0]
             else:
                 abbreviated = address.split('@')[0]
             formatted = '%s <%s>' % (realname, address)
